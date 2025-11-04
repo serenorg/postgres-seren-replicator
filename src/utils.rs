@@ -252,7 +252,11 @@ mod tests {
         if result.is_err() {
             let err_msg = result.unwrap_err().to_string();
             assert!(err_msg.contains("Missing required PostgreSQL client tools"));
-            assert!(err_msg.contains("pg_dump") || err_msg.contains("pg_dumpall") || err_msg.contains("psql"));
+            assert!(
+                err_msg.contains("pg_dump")
+                    || err_msg.contains("pg_dumpall")
+                    || err_msg.contains("psql")
+            );
         }
     }
 
