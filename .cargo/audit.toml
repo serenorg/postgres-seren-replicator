@@ -1,6 +1,0 @@
-[advisories]
-# Ignore specific advisories (use sparingly, document why)
-ignore = []
-
-# Warn about unmaintained and yanked crates
-informational_warnings = ["unmaintained", "yanked"]

@@ -249,8 +249,8 @@ mod tests {
 
         // On systems with PostgreSQL installed, this should pass
         // On systems without it, we expect a specific error message
-        if result.is_err() {
-            let err_msg = result.unwrap_err().to_string();
+        if let Err(err) = result {
+            let err_msg = err.to_string();
             assert!(err_msg.contains("Missing required PostgreSQL client tools"));
             assert!(
                 err_msg.contains("pg_dump")
