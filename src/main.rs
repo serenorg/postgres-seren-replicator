@@ -69,9 +69,7 @@ async fn main() -> anyhow::Result<()> {
             commands::sync(&source, &target, None, None, None).await
         }
         Commands::Status { source, target } => {
-            println!("Checking replication status from {} to {}", source, target);
-            // TODO: Implement
-            Ok(())
+            commands::status(&source, &target, None).await
         }
         Commands::Verify { source, target } => {
             println!("Verifying data integrity from {} to {}", source, target);
