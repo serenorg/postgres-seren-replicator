@@ -63,9 +63,9 @@ pub async fn verify(source_url: &str, target_url: &str) -> Result<()> {
         .await
         .context("Failed to create additional target connection")?;
 
-    // Store clients in a vector for round-robin access
-    let source_clients = vec![source_client, source_client2];
-    let target_clients = vec![target_client, target_client2];
+    // Store clients in an array for round-robin access
+    let source_clients = [source_client, source_client2];
+    let target_clients = [target_client, target_client2];
 
     // Process tables in parallel with limited concurrency
     let mut results: Vec<ChecksumResult> = Vec::new();
