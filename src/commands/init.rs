@@ -1,4 +1,4 @@
-// ABOUTME: Initial migration command for schema and data copy
+// ABOUTME: Initial replication command for snapshot schema and data copy
 // ABOUTME: Performs full database dump and restore from source to target
 
 use crate::{migration, postgres};
@@ -6,15 +6,15 @@ use anyhow::{bail, Context, Result};
 use std::io::{self, Write};
 use tempfile::TempDir;
 
-/// Initial migration command for schema and data copy
+/// Initial replication command for snapshot schema and data copy
 ///
 /// Performs a full database dump and restore from source to target in steps:
-/// 1. Estimates database sizes and migration times
+/// 1. Estimates database sizes and replication times
 /// 2. Prompts for confirmation (unless skip_confirmation is true)
 /// 3. Dumps global objects (roles, tablespaces) from source
 /// 4. Restores global objects to target
 /// 5. Discovers all user databases on source
-/// 6. Migrates each database (schema and data)
+/// 6. Replicates each database (schema and data)
 ///
 /// Uses temporary directory for dump files, which is automatically cleaned up.
 ///
@@ -26,7 +26,7 @@ use tempfile::TempDir;
 ///
 /// # Returns
 ///
-/// Returns `Ok(())` if migration completes successfully.
+/// Returns `Ok(())` if replication completes successfully.
 ///
 /// # Errors
 ///
@@ -35,14 +35,14 @@ use tempfile::TempDir;
 /// - Global objects dump/restore fails
 /// - Cannot connect to source database
 /// - Database discovery fails
-/// - Any database migration fails
+/// - Any database replication fails
 /// - User declines confirmation prompt
 ///
 /// # Examples
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_migrator::commands::init;
+/// # use neon_seren_replicator::commands::init;
 /// # async fn example() -> Result<()> {
 /// // With confirmation prompt
 /// init(
@@ -61,7 +61,7 @@ use tempfile::TempDir;
 /// # }
 /// ```
 pub async fn init(source_url: &str, target_url: &str, skip_confirmation: bool) -> Result<()> {
-    tracing::info!("Starting initial migration...");
+    tracing::info!("Starting initial replication...");
 
     // Create temporary directory for dump files
     // TempDir automatically cleans up on drop, even if errors occur
@@ -86,28 +86,28 @@ pub async fn init(source_url: &str, target_url: &str, skip_confirmation: bool) -
     if databases.is_empty() {
         tracing::warn!("⚠ No user databases found on source");
         tracing::warn!("  This is unusual - the source database appears empty");
-        tracing::warn!("  Only global objects (roles, tablespaces) will be migrated");
-        tracing::info!("✅ Initial migration complete (no databases to migrate)");
+        tracing::warn!("  Only global objects (roles, tablespaces) will be replicated");
+        tracing::info!("✅ Initial replication complete (no databases to replicate)");
         return Ok(());
     }
 
-    tracing::info!("Found {} database(s) to migrate", databases.len());
+    tracing::info!("Found {} database(s) to replicate", databases.len());
 
     // Estimate database sizes and get confirmation
     if !skip_confirmation {
         tracing::info!("Analyzing database sizes...");
         let size_estimates = migration::estimate_database_sizes(&source_client, &databases).await?;
 
-        if !confirm_migration(&size_estimates)? {
-            bail!("Migration cancelled by user");
+        if !confirm_replication(&size_estimates)? {
+            bail!("Replication cancelled by user");
         }
     }
 
-    // Step 4: Migrate each database
-    tracing::info!("Step 4/4: Migrating databases...");
+    // Step 4: Replicate each database
+    tracing::info!("Step 4/4: Replicating databases...");
     for (idx, db_info) in databases.iter().enumerate() {
         tracing::info!(
-            "Migrating database {}/{}: '{}'",
+            "Replicating database {}/{}: '{}'",
             idx + 1,
             databases.len(),
             db_info.name
@@ -138,10 +138,10 @@ pub async fn init(source_url: &str, target_url: &str, skip_confirmation: bool) -
         tracing::info!("  Restoring data for '{}'...", db_info.name);
         migration::restore_data(&target_db_url, data_dir.to_str().unwrap()).await?;
 
-        tracing::info!("✓ Database '{}' migrated successfully", db_info.name);
+        tracing::info!("✓ Database '{}' replicated successfully", db_info.name);
     }
 
-    tracing::info!("✅ Initial migration complete");
+    tracing::info!("✅ Initial replication complete");
     Ok(())
 }
 
@@ -200,8 +200,8 @@ async fn create_database_if_not_exists(
 
 /// Display database size estimates and prompt for confirmation
 ///
-/// Shows a table with database names, sizes, and estimated migration times.
-/// Prompts the user to proceed with the migration.
+/// Shows a table with database names, sizes, and estimated replication times.
+/// Prompts the user to proceed with the replication.
 ///
 /// # Arguments
 ///
@@ -214,7 +214,7 @@ async fn create_database_if_not_exists(
 /// # Errors
 ///
 /// Returns an error if stdin/stdout operations fail.
-fn confirm_migration(sizes: &[migration::DatabaseSizeInfo]) -> Result<bool> {
+fn confirm_replication(sizes: &[migration::DatabaseSizeInfo]) -> Result<bool> {
     use std::time::Duration;
 
     // Calculate totals
@@ -246,7 +246,7 @@ fn confirm_migration(sizes: &[migration::DatabaseSizeInfo]) -> Result<bool> {
     println!();
 
     // Prompt for confirmation
-    print!("Proceed with migration? [y/N]: ");
+    print!("Proceed with replication? [y/N]: ");
     io::stdout().flush()?;
 
     let mut input = String::new();
@@ -263,7 +263,7 @@ mod tests {
 
     #[tokio::test]
     #[ignore]
-    async fn test_init_migrates_database() {
+    async fn test_init_replicates_database() {
         let source = std::env::var("TEST_SOURCE_URL").unwrap();
         let target = std::env::var("TEST_TARGET_URL").unwrap();
 

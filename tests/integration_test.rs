@@ -1,7 +1,7 @@
-// ABOUTME: Integration tests for the full migration workflow
+// ABOUTME: Integration tests for the full replication workflow
 // ABOUTME: Tests all commands end-to-end with real database connections
 
-use neon_seren_migrator::commands;
+use neon_seren_replicator::commands;
 use std::env;
 
 /// Helper to get test database URLs from environment
@@ -138,12 +138,12 @@ async fn test_verify_command_integration() {
 
 #[tokio::test]
 #[ignore]
-async fn test_full_migration_workflow() {
+async fn test_full_replication_workflow() {
     let (source_url, target_url) =
         get_test_urls().expect("TEST_SOURCE_URL and TEST_TARGET_URL must be set");
 
     println!("========================================");
-    println!("Testing FULL migration workflow");
+    println!("Testing FULL replication workflow");
     println!("========================================");
     println!();
 
@@ -162,8 +162,8 @@ async fn test_full_migration_workflow() {
     // Step 2: Init (commented out by default to avoid destructive operations)
     // Uncomment this section to test the full workflow including data copy
     /*
-    println!("STEP 2: Initialize migration...");
-    let init_result = commands::init(&source_url, &target_url).await;
+    println!("STEP 2: Initialize replication...");
+    let init_result = commands::init(&source_url, &target_url, true).await;
     match &init_result {
         Ok(_) => println!("✓ Init completed"),
         Err(e) => {

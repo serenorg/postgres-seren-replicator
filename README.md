@@ -1,36 +1,36 @@
-# neon-seren-migrator
+# neon-seren-replicator
 
-[![CI](https://github.com/serenorg/neon-seren-migrator/actions/workflows/ci.yml/badge.svg)](https://github.com/serenorg/neon-seren-migrator/actions/workflows/ci.yml)
+[![CI](https://github.com/serenorg/neon-seren-replicator/actions/workflows/ci.yml/badge.svg)](https://github.com/serenorg/neon-seren-replicator/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org)
-[![Latest Release](https://img.shields.io/github/v/release/serenorg/neon-seren-migrator)](https://github.com/serenorg/neon-seren-migrator/releases)
+[![Latest Release](https://img.shields.io/github/v/release/serenorg/neon-seren-replicator)](https://github.com/serenorg/neon-seren-replicator/releases)
 
-Zero-downtime database migration tool from Neon to Seren using PostgreSQL logical replication.
+Zero-downtime PostgreSQL replication tool from Neon to Seren with continuous sync and real-time monitoring.
 
 ## Overview
 
-This tool enables safe, zero-downtime migration of PostgreSQL databases from Neon Cloud to Seren Cloud. It uses PostgreSQL's logical replication to keep databases in sync during the migration process.
+This tool enables safe, zero-downtime replication of PostgreSQL databases from Neon Cloud to Seren Cloud. It uses PostgreSQL's logical replication for continuous data synchronization with real-time monitoring.
 
 ## Features
 
-- **Zero Downtime**: Uses logical replication to keep databases in sync
-- **Size Estimation**: Analyze database sizes and view estimated migration times before starting
+- **Zero Downtime**: Uses logical replication to keep databases continuously in sync
+- **Size Estimation**: Analyze database sizes and view estimated replication times before starting
 - **High Performance**: Parallel dump/restore with automatic CPU core detection
 - **Optimized Compression**: Maximum compression (level 9) for faster transfers
 - **Large Object Support**: Handles BLOBs and large binary objects efficiently
-- **Complete Migration**: Migrates schema, data, roles, and permissions
+- **Complete Replication**: Replicates schema, data, roles, and permissions
 - **Data Validation**: Checksum-based verification of data integrity
-- **Real-time Monitoring**: Track replication lag and status
-- **Safe & Fail-fast**: Validates prerequisites before starting migration
+- **Real-time Monitoring**: Track replication lag and status continuously
+- **Safe & Fail-fast**: Validates prerequisites before starting replication
 
-## Migration Workflow
+## Replication Workflow
 
-The migration process follows 5 phases:
+The replication process follows 5 phases:
 
-1. **Validate** - Check source and target databases meet requirements
-2. **Init** - Copy initial schema and data using pg_dump/restore
-3. **Sync** - Set up logical replication between databases
-4. **Status** - Monitor replication lag and health
+1. **Validate** - Check source and target databases meet replication requirements
+2. **Init** - Perform initial snapshot replication (schema + data) using pg_dump/restore
+3. **Sync** - Set up continuous logical replication between databases
+4. **Status** - Monitor replication lag and health in real-time
 5. **Verify** - Validate data integrity with checksums
 
 ## Installation
@@ -42,17 +42,17 @@ The migration process follows 5 phases:
 
 ### Download Pre-built Binaries
 
-Download the latest release for your platform from [GitHub Releases](https://github.com/serenorg/neon-seren-migrator/releases/latest):
+Download the latest release for your platform from [GitHub Releases](https://github.com/serenorg/neon-seren-replicator/releases/latest):
 
-- **Linux (x64)**: `neon-seren-migrator-linux-x64-binary`
-- **macOS (Intel)**: `neon-seren-migrator-macos-x64-binary`
-- **macOS (Apple Silicon)**: `neon-seren-migrator-macos-arm64-binary`
+- **Linux (x64)**: `neon-seren-replicator-linux-x64-binary`
+- **macOS (Intel)**: `neon-seren-replicator-macos-x64-binary`
+- **macOS (Apple Silicon)**: `neon-seren-replicator-macos-arm64-binary`
 
 Make the binary executable:
 
 ```bash
-chmod +x neon-seren-migrator-*-binary
-./neon-seren-migrator-*-binary --help
+chmod +x neon-seren-replicator-*-binary
+./neon-seren-replicator-*-binary --help
 ```
 
 ### Build from Source
@@ -60,31 +60,31 @@ chmod +x neon-seren-migrator-*-binary
 Requires Rust 1.70 or later:
 
 ```bash
-git clone https://github.com/serenorg/neon-seren-migrator.git
-cd neon-seren-migrator
+git clone https://github.com/serenorg/neon-seren-replicator.git
+cd neon-seren-replicator
 cargo build --release
 ```
 
-The binary will be available at `target/release/neon-seren-migrator`.
+The binary will be available at `target/release/neon-seren-replicator`.
 
 ## Usage
 
 ### 1. Validate Databases
 
-Check that both databases meet migration requirements:
+Check that both databases meet replication requirements:
 
 ```bash
-./neon-seren-migrator validate \
+./neon-seren-replicator validate \
   --source "postgresql://user:pass@neon-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
-### 2. Initialize Migration
+### 2. Initialize Replication
 
-Copy initial schema and data. The tool will first analyze database sizes and show estimated migration times:
+Perform initial snapshot replication. The tool will first analyze database sizes and show estimated replication times:
 
 ```bash
-./neon-seren-migrator init \
+./neon-seren-replicator init \
   --source "postgresql://user:pass@neon-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
@@ -101,34 +101,34 @@ staging             2.0 GB       ~6.0 minutes
 ──────────────────────────────────────────────────
 Total: 267.0 GB (estimated ~13.3 hours)
 
-Proceed with migration? [y/N]:
+Proceed with replication? [y/N]:
 ```
 
 For automated scripts, skip the confirmation prompt with `--yes` or `-y`:
 
 ```bash
-./neon-seren-migrator init \
+./neon-seren-replicator init \
   --source "postgresql://user:pass@neon-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db" \
   --yes
 ```
 
-### 3. Set Up Replication
+### 3. Set Up Continuous Replication
 
-Enable logical replication to sync ongoing changes:
+Enable logical replication for ongoing change synchronization:
 
 ```bash
-./neon-seren-migrator sync \
+./neon-seren-replicator sync \
   --source "postgresql://user:pass@neon-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
-### 4. Monitor Status
+### 4. Monitor Replication Status
 
-Check replication health and lag:
+Check replication health and lag in real-time:
 
 ```bash
-./neon-seren-migrator status \
+./neon-seren-replicator status \
   --source "postgresql://user:pass@neon-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
@@ -138,7 +138,7 @@ Check replication health and lag:
 Validate that all tables match:
 
 ```bash
-./neon-seren-migrator verify \
+./neon-seren-replicator verify \
   --source "postgresql://user:pass@neon-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
@@ -216,7 +216,7 @@ export TEST_TARGET_URL="postgresql://postgres:postgres@localhost:5433/postgres"
 
 ## Performance Optimizations
 
-The tool uses several optimizations for fast, efficient database migrations:
+The tool uses several optimizations for fast, efficient database replication:
 
 ### Parallel Operations
 
@@ -236,7 +236,7 @@ The tool uses several optimizations for fast, efficient database migrations:
 - **Blob support**: Includes large objects (BLOBs) with `--blobs` flag
 - **Binary data**: Handles images, documents, and other binary data efficiently
 
-These optimizations can significantly reduce migration time, especially for large databases with many tables.
+These optimizations can significantly reduce replication time, especially for large databases with many tables.
 
 ## Architecture
 
@@ -266,19 +266,19 @@ The tool handles existing publications gracefully. If you need to start over:
 
 ```sql
 -- On target
-DROP SUBSCRIPTION IF EXISTS seren_migration_sub;
+DROP SUBSCRIPTION IF EXISTS seren_replication_sub;
 
 -- On source
-DROP PUBLICATION IF EXISTS seren_migration_pub;
+DROP PUBLICATION IF EXISTS seren_replication_pub;
 ```
 
 ### Replication lag
 
-Check status frequently during migration:
+Check status frequently during replication:
 
 ```bash
 # Monitor until lag < 1 second
-watch -n 5 './neon-seren-migrator status --source "$SOURCE" --target "$TARGET"'
+watch -n 5 './neon-seren-replicator status --source "$SOURCE" --target "$TARGET"'
 ```
 
 ## License

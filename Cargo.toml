@@ -1,12 +1,12 @@
 [package]
-name = "neon-seren-migrator"
-version = "0.1.3"
+name = "neon-seren-replicator"
+version = "0.2.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "Zero-downtime database migration tool from Neon to Seren using PostgreSQL logical replication"
-repository = "https://github.com/serenorg/neon-seren-migrator"
+description = "Zero-downtime PostgreSQL replication tool from Neon to Seren with continuous sync and monitoring"
+repository = "https://github.com/serenorg/neon-seren-replicator"
 readme = "README.md"
-keywords = ["postgresql", "migration", "replication", "database", "neon"]
+keywords = ["postgresql", "replication", "database", "neon", "cdc"]
 categories = ["command-line-utilities", "database"]
 
 [dependencies]

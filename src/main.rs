@@ -1,12 +1,12 @@
-// ABOUTME: CLI entry point for neon-seren-migrator
+// ABOUTME: CLI entry point for neon-seren-replicator
 // ABOUTME: Parses commands and routes to appropriate handlers
 
 use clap::{Parser, Subcommand};
-use neon_seren_migrator::commands;
+use neon_seren_replicator::commands;
 
 #[derive(Parser)]
-#[command(name = "neon-seren-migrator")]
-#[command(about = "Zero-downtime migration from Neon to Seren", long_about = None)]
+#[command(name = "neon-seren-replicator")]
+#[command(about = "Zero-downtime PostgreSQL replication from Neon to Seren", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -14,14 +14,14 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Validate source and target databases are ready for migration
+    /// Validate source and target databases are ready for replication
     Validate {
         #[arg(long)]
         source: String,
         #[arg(long)]
         target: String,
     },
-    /// Initialize migration with schema and data copy
+    /// Initialize replication with snapshot copy of schema and data
     Init {
         #[arg(long)]
         source: String,
@@ -31,14 +31,14 @@ enum Commands {
         #[arg(short = 'y', long)]
         yes: bool,
     },
-    /// Set up logical replication from source to target
+    /// Set up continuous logical replication from source to target
     Sync {
         #[arg(long)]
         source: String,
         #[arg(long)]
         target: String,
     },
-    /// Check replication status and lag
+    /// Check replication status and lag in real-time
     Status {
         #[arg(long)]
         source: String,

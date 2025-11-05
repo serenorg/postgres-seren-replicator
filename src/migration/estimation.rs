@@ -1,5 +1,5 @@
-// ABOUTME: Database size estimation and migration time prediction
-// ABOUTME: Helps users understand resource requirements before migration
+// ABOUTME: Database size estimation and replication time prediction
+// ABOUTME: Helps users understand resource requirements before replication
 
 use anyhow::{Context, Result};
 use std::time::Duration;
@@ -7,7 +7,7 @@ use tokio_postgres::Client;
 
 use super::schema::DatabaseInfo;
 
-/// Information about a database's size and estimated migration time
+/// Information about a database's size and estimated replication time
 #[derive(Debug, Clone)]
 pub struct DatabaseSizeInfo {
     /// Database name
@@ -16,15 +16,15 @@ pub struct DatabaseSizeInfo {
     pub size_bytes: i64,
     /// Human-readable size (e.g., "15.3 GB")
     pub size_human: String,
-    /// Estimated migration duration
+    /// Estimated replication duration
     pub estimated_duration: Duration,
 }
 
-/// Estimate database sizes and migration times
+/// Estimate database sizes and replication times
 ///
-/// Queries PostgreSQL for database sizes and calculates estimated migration times
+/// Queries PostgreSQL for database sizes and calculates estimated replication times
 /// based on typical dump/restore speeds. Uses a conservative estimate of 20 GB/hour
-/// for total migration time (dump + restore).
+/// for total replication time (dump + restore).
 ///
 /// # Arguments
 ///
@@ -45,8 +45,8 @@ pub struct DatabaseSizeInfo {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_migrator::postgres::connect;
-/// # use neon_seren_migrator::migration::{list_databases, estimate_database_sizes};
+/// # use neon_seren_replicator::postgres::connect;
+/// # use neon_seren_replicator::migration::{list_databases, estimate_database_sizes};
 /// # async fn example() -> Result<()> {
 /// let client = connect("postgresql://user:pass@localhost:5432/postgres").await?;
 /// let databases = list_databases(&client).await?;
@@ -73,12 +73,12 @@ pub async fn estimate_database_sizes(
 
         let size_bytes: i64 = row.get(0);
 
-        // Estimate migration time based on typical speeds
+        // Estimate replication time based on typical speeds
         // Conservative estimates:
         // - Dump: 25-35 GB/hour
         // - Restore: 15-25 GB/hour
         // Combined conservative estimate: 20 GB/hour total
-        let estimated_duration = estimate_migration_duration(size_bytes);
+        let estimated_duration = estimate_replication_duration(size_bytes);
 
         sizes.push(DatabaseSizeInfo {
             name: db.name.clone(),
@@ -91,9 +91,9 @@ pub async fn estimate_database_sizes(
     Ok(sizes)
 }
 
-/// Estimate migration duration based on database size
+/// Estimate replication duration based on database size
 ///
-/// Uses a conservative estimate of 20 GB/hour for total migration time,
+/// Uses a conservative estimate of 20 GB/hour for total replication time,
 /// which accounts for both dump and restore operations.
 ///
 /// # Arguments
@@ -102,8 +102,8 @@ pub async fn estimate_database_sizes(
 ///
 /// # Returns
 ///
-/// Estimated duration for complete migration (dump + restore)
-fn estimate_migration_duration(size_bytes: i64) -> Duration {
+/// Estimated duration for complete replication (dump + restore)
+fn estimate_replication_duration(size_bytes: i64) -> Duration {
     // Conservative estimate: 20 GB/hour total (dump + restore)
     const BYTES_PER_HOUR: f64 = 20.0 * 1024.0 * 1024.0 * 1024.0; // 20 GB
 
@@ -127,7 +127,7 @@ fn estimate_migration_duration(size_bytes: i64) -> Duration {
 /// # Examples
 ///
 /// ```
-/// # use neon_seren_migrator::migration::format_bytes;
+/// # use neon_seren_replicator::migration::format_bytes;
 /// assert_eq!(format_bytes(1024), "1.0 KB");
 /// assert_eq!(format_bytes(1536), "1.5 KB");
 /// assert_eq!(format_bytes(1073741824), "1.0 GB");
@@ -163,7 +163,7 @@ pub fn format_bytes(bytes: i64) -> String {
 ///
 /// ```
 /// # use std::time::Duration;
-/// # use neon_seren_migrator::migration::format_duration;
+/// # use neon_seren_replicator::migration::format_duration;
 /// assert_eq!(format_duration(Duration::from_secs(45)), "~45 seconds");
 /// assert_eq!(format_duration(Duration::from_secs(120)), "~2.0 minutes");
 /// assert_eq!(format_duration(Duration::from_secs(3600)), "~1.0 hours");
@@ -216,13 +216,13 @@ mod tests {
     }
 
     #[test]
-    fn test_estimate_migration_duration() {
+    fn test_estimate_replication_duration() {
         // 1 GB should take ~3 minutes (20 GB/hour = 0.05 hours for 1 GB)
-        let duration = estimate_migration_duration(1073741824);
+        let duration = estimate_replication_duration(1073741824);
         assert!(duration.as_secs() >= 170 && duration.as_secs() <= 190);
 
         // 20 GB should take ~1 hour
-        let duration = estimate_migration_duration(21474836480);
+        let duration = estimate_replication_duration(21474836480);
         assert!(duration.as_secs() >= 3500 && duration.as_secs() <= 3700);
     }
 }
