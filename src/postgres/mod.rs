@@ -2,7 +2,12 @@
 // ABOUTME: Exports connection management and common database operations
 
 pub mod connection;
+pub mod extensions;
 pub mod privileges;
 
 pub use connection::connect;
+pub use extensions::{
+    get_available_extensions, get_installed_extensions, get_preloaded_libraries, requires_preload,
+    AvailableExtension, Extension,
+};
 pub use privileges::{check_source_privileges, check_target_privileges, PrivilegeCheck};
