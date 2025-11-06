@@ -21,16 +21,16 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: neon-seren-replicator
-            asset_name: neon-seren-replicator-linux-x64-binary
+            artifact_name: postgres-seren-replicator
+            asset_name: postgres-seren-replicator-linux-x64-binary
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: neon-seren-replicator
-            asset_name: neon-seren-replicator-macos-x64-binary
+            artifact_name: postgres-seren-replicator
+            asset_name: postgres-seren-replicator-macos-x64-binary
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: neon-seren-replicator
-            asset_name: neon-seren-replicator-macos-arm64-binary
+            artifact_name: postgres-seren-replicator
+            asset_name: postgres-seren-replicator-macos-arm64-binary
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -99,28 +99,28 @@ jobs:
 
           Download the appropriate binary for your platform:
 
-          - **Linux (x64)**: `neon-seren-replicator-linux-x64-binary`
-          - **macOS (Intel)**: `neon-seren-replicator-macos-x64-binary`
-          - **macOS (Apple Silicon)**: `neon-seren-replicator-macos-arm64-binary`
+          - **Linux (x64)**: `postgres-seren-replicator-linux-x64-binary`
+          - **macOS (Intel)**: `postgres-seren-replicator-macos-x64-binary`
+          - **macOS (Apple Silicon)**: `postgres-seren-replicator-macos-arm64-binary`
 
           Make the binary executable:
 
           ```bash
-          chmod +x neon-seren-replicator-*-binary
-          ./neon-seren-replicator-*-binary --help
+          chmod +x postgres-seren-replicator-*-binary
+          ./postgres-seren-replicator-*-binary --help
           ```
 
           ### Fixed Issues
 
           - #33: CLI commands produce no output without RUST_LOG environment variable
 
-          **Full Changelog**: https://github.com/serenorg/neon-seren-replicator/compare/v0.2.0...${VERSION}
+          **Full Changelog**: https://github.com/serenorg/postgres-seren-replicator/compare/v0.2.0...${VERSION}
           EOF
 
           # Create release with all binaries
           gh release create "${VERSION}" \
             --title "Release ${VERSION}" \
             --notes-file release-notes.md \
-            release-artifacts/neon-seren-replicator-linux-x64-binary/neon-seren-replicator-linux-x64-binary \
-            release-artifacts/neon-seren-replicator-macos-x64-binary/neon-seren-replicator-macos-x64-binary \
-            release-artifacts/neon-seren-replicator-macos-arm64-binary/neon-seren-replicator-macos-arm64-binary
+            release-artifacts/postgres-seren-replicator-linux-x64-binary/postgres-seren-replicator-linux-x64-binary \
+            release-artifacts/postgres-seren-replicator-macos-x64-binary/postgres-seren-replicator-macos-x64-binary \
+            release-artifacts/postgres-seren-replicator-macos-arm64-binary/postgres-seren-replicator-macos-arm64-binary

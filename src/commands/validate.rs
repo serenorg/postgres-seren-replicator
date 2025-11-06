@@ -38,7 +38,7 @@ use anyhow::{bail, Context, Result};
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::commands::validate;
+/// # use postgres_seren_replicator::commands::validate;
 /// # async fn example() -> Result<()> {
 /// validate(
 ///     "postgresql://user:pass@neon.tech/sourcedb",

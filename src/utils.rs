@@ -31,7 +31,7 @@ use which::which;
 /// # Examples
 ///
 /// ```
-/// # use neon_seren_replicator::utils::validate_connection_string;
+/// # use postgres_seren_replicator::utils::validate_connection_string;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// // Valid connection strings
@@ -95,7 +95,7 @@ pub fn validate_connection_string(url: &str) -> Result<()> {
 /// # Examples
 ///
 /// ```
-/// # use neon_seren_replicator::utils::check_required_tools;
+/// # use postgres_seren_replicator::utils::check_required_tools;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// // Check if PostgreSQL tools are installed
@@ -149,7 +149,7 @@ pub fn check_required_tools() -> Result<()> {
 /// ```no_run
 /// # use anyhow::Result;
 /// # use std::time::Duration;
-/// # use neon_seren_replicator::utils::retry_with_backoff;
+/// # use postgres_seren_replicator::utils::retry_with_backoff;
 /// # async fn example() -> Result<()> {
 /// let result = retry_with_backoff(
 ///     || async { Ok("success") },
@@ -213,7 +213,7 @@ where
 /// # Examples
 ///
 /// ```
-/// # use neon_seren_replicator::utils::sanitize_identifier;
+/// # use postgres_seren_replicator::utils::sanitize_identifier;
 /// assert_eq!(sanitize_identifier("normal_table"), "normal_table");
 /// assert_eq!(sanitize_identifier("table\x00name"), "tablename");
 /// assert_eq!(sanitize_identifier("table\nname"), "tablename");

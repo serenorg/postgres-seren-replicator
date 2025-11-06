@@ -1,12 +1,12 @@
-// ABOUTME: CLI entry point for neon-seren-replicator
+// ABOUTME: CLI entry point for postgres-seren-replicator
 // ABOUTME: Parses commands and routes to appropriate handlers
 
 use clap::{Parser, Subcommand};
-use neon_seren_replicator::commands;
+use postgres_seren_replicator::commands;
 
 #[derive(Parser)]
-#[command(name = "neon-seren-replicator")]
-#[command(about = "Zero-downtime PostgreSQL replication from Neon to Seren", long_about = None)]
+#[command(name = "postgres-seren-replicator")]
+#[command(about = "Zero-downtime PostgreSQL replication to Seren Cloud", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

@@ -39,7 +39,7 @@ use anyhow::{Context, Result};
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::commands::sync;
+/// # use postgres_seren_replicator::commands::sync;
 /// # async fn example() -> Result<()> {
 /// sync(
 ///     "postgresql://user:pass@neon.tech/sourcedb",

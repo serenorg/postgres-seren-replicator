@@ -55,7 +55,7 @@ fn format_duration(ms: i64) -> String {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::commands::status;
+/// # use postgres_seren_replicator::commands::status;
 /// # async fn example() -> Result<()> {
 /// status(
 ///     "postgresql://user:pass@neon.tech/sourcedb",

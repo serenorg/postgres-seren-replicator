@@ -36,7 +36,7 @@ use tokio_postgres::Client;
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::postgres::connect;
+/// # use postgres_seren_replicator::postgres::connect;
 /// # async fn example() -> Result<()> {
 /// let client = connect("postgresql://user:pass@localhost:5432/mydb").await?;
 /// # Ok(())
@@ -145,7 +145,7 @@ pub async fn connect(connection_string: &str) -> Result<Client> {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::postgres::connection::connect_with_retry;
+/// # use postgres_seren_replicator::postgres::connection::connect_with_retry;
 /// # async fn example() -> Result<()> {
 /// let client = connect_with_retry("postgresql://user:pass@localhost:5432/mydb").await?;
 /// # Ok(())

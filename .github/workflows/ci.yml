@@ -89,13 +89,13 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: neon-seren-replicator-linux-x64
+            artifact_name: postgres-seren-replicator-linux-x64
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: neon-seren-replicator-macos-x64
+            artifact_name: postgres-seren-replicator-macos-x64
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: neon-seren-replicator-macos-arm64
+            artifact_name: postgres-seren-replicator-macos-arm64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -112,5 +112,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: target/${{ matrix.target }}/release/neon-seren-replicator${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+          path: target/${{ matrix.target }}/release/postgres-seren-replicator${{ matrix.os == 'windows-latest' && '.exe' || '' }}
           if-no-files-found: error

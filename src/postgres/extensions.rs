@@ -91,9 +91,7 @@ const PRELOAD_REQUIRED_EXTENSIONS: &[&str] = &[
 
 /// Check if an extension requires preloading
 pub fn requires_preload(extension_name: &str) -> bool {
-    PRELOAD_REQUIRED_EXTENSIONS
-        .iter()
-        .any(|&name| name == extension_name)
+    PRELOAD_REQUIRED_EXTENSIONS.contains(&extension_name)
 }
 
 #[cfg(test)]

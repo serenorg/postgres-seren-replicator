@@ -38,7 +38,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::commands::verify;
+/// # use postgres_seren_replicator::commands::verify;
 /// # async fn example() -> Result<()> {
 /// verify(
 ///     "postgresql://user:pass@neon.tech/sourcedb",

@@ -1,7 +1,7 @@
 // ABOUTME: Integration tests for the full replication workflow
 // ABOUTME: Tests all commands end-to-end with real database connections
 
-use neon_seren_replicator::commands;
+use postgres_seren_replicator::commands;
 use std::env;
 
 /// Helper to get test database URLs from environment

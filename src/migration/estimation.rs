@@ -45,8 +45,8 @@ pub struct DatabaseSizeInfo {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::postgres::connect;
-/// # use neon_seren_replicator::migration::{list_databases, estimate_database_sizes};
+/// # use postgres_seren_replicator::postgres::connect;
+/// # use postgres_seren_replicator::migration::{list_databases, estimate_database_sizes};
 /// # async fn example() -> Result<()> {
 /// let client = connect("postgresql://user:pass@localhost:5432/postgres").await?;
 /// let databases = list_databases(&client).await?;
@@ -127,7 +127,7 @@ fn estimate_replication_duration(size_bytes: i64) -> Duration {
 /// # Examples
 ///
 /// ```
-/// # use neon_seren_replicator::migration::format_bytes;
+/// # use postgres_seren_replicator::migration::format_bytes;
 /// assert_eq!(format_bytes(1024), "1.0 KB");
 /// assert_eq!(format_bytes(1536), "1.5 KB");
 /// assert_eq!(format_bytes(1073741824), "1.0 GB");
@@ -163,7 +163,7 @@ pub fn format_bytes(bytes: i64) -> String {
 ///
 /// ```
 /// # use std::time::Duration;
-/// # use neon_seren_replicator::migration::format_duration;
+/// # use postgres_seren_replicator::migration::format_duration;
 /// assert_eq!(format_duration(Duration::from_secs(45)), "~45 seconds");
 /// assert_eq!(format_duration(Duration::from_secs(120)), "~2.0 minutes");
 /// assert_eq!(format_duration(Duration::from_secs(3600)), "~1.0 hours");

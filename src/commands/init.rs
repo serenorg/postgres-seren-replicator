@@ -42,7 +42,7 @@ use tempfile::TempDir;
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use neon_seren_replicator::commands::init;
+/// # use postgres_seren_replicator::commands::init;
 /// # async fn example() -> Result<()> {
 /// // With confirmation prompt
 /// init(

@@ -1,15 +1,15 @@
-# neon-seren-replicator
+# postgres-seren-replicator
 
-[![CI](https://github.com/serenorg/neon-seren-replicator/actions/workflows/ci.yml/badge.svg)](https://github.com/serenorg/neon-seren-replicator/actions/workflows/ci.yml)
+[![CI](https://github.com/serenorg/postgres-seren-replicator/actions/workflows/ci.yml/badge.svg)](https://github.com/serenorg/postgres-seren-replicator/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org)
-[![Latest Release](https://img.shields.io/github/v/release/serenorg/neon-seren-replicator)](https://github.com/serenorg/neon-seren-replicator/releases)
+[![Latest Release](https://img.shields.io/github/v/release/serenorg/postgres-seren-replicator)](https://github.com/serenorg/postgres-seren-replicator/releases)
 
-Zero-downtime PostgreSQL replication tool from Neon to Seren with continuous sync and real-time monitoring.
+Zero-downtime PostgreSQL replication tool from PostgreSQL to Seren with continuous sync and real-time monitoring.
 
 ## Overview
 
-This tool enables safe, zero-downtime replication of PostgreSQL databases from Neon Cloud to Seren Cloud. It uses PostgreSQL's logical replication for continuous data synchronization with real-time monitoring.
+This tool enables safe, zero-downtime replication of PostgreSQL databases from any PostgreSQL provider to Seren Cloud. It uses PostgreSQL's logical replication for continuous data synchronization with real-time monitoring.
 
 ## Features
 
@@ -38,21 +38,21 @@ The replication process follows 5 phases:
 ### Prerequisites
 
 - PostgreSQL client tools (pg_dump, pg_dumpall, psql)
-- Access to both Neon and Seren databases with appropriate permissions
+- Access to both source and target databases with appropriate permissions
 
 ### Download Pre-built Binaries
 
-Download the latest release for your platform from [GitHub Releases](https://github.com/serenorg/neon-seren-replicator/releases/latest):
+Download the latest release for your platform from [GitHub Releases](https://github.com/serenorg/postgres-seren-replicator/releases/latest):
 
-- **Linux (x64)**: `neon-seren-replicator-linux-x64-binary`
-- **macOS (Intel)**: `neon-seren-replicator-macos-x64-binary`
-- **macOS (Apple Silicon)**: `neon-seren-replicator-macos-arm64-binary`
+- **Linux (x64)**: `postgres-seren-replicator-linux-x64-binary`
+- **macOS (Intel)**: `postgres-seren-replicator-macos-x64-binary`
+- **macOS (Apple Silicon)**: `postgres-seren-replicator-macos-arm64-binary`
 
 Make the binary executable:
 
 ```bash
-chmod +x neon-seren-replicator-*-binary
-./neon-seren-replicator-*-binary --help
+chmod +x postgres-seren-replicator-*-binary
+./postgres-seren-replicator-*-binary --help
 ```
 
 ### Build from Source
@@ -60,12 +60,12 @@ chmod +x neon-seren-replicator-*-binary
 Requires Rust 1.70 or later:
 
 ```bash
-git clone https://github.com/serenorg/neon-seren-replicator.git
-cd neon-seren-replicator
+git clone https://github.com/serenorg/postgres-seren-replicator.git
+cd postgres-seren-replicator
 cargo build --release
 ```
 
-The binary will be available at `target/release/neon-seren-replicator`.
+The binary will be available at `target/release/postgres-seren-replicator`.
 
 ## Usage
 
@@ -74,8 +74,8 @@ The binary will be available at `target/release/neon-seren-replicator`.
 Check that both databases meet replication requirements:
 
 ```bash
-./neon-seren-replicator validate \
-  --source "postgresql://user:pass@neon-host:5432/db" \
+./postgres-seren-replicator validate \
+  --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
@@ -84,8 +84,8 @@ Check that both databases meet replication requirements:
 Perform initial snapshot replication. The tool will first analyze database sizes and show estimated replication times:
 
 ```bash
-./neon-seren-replicator init \
-  --source "postgresql://user:pass@neon-host:5432/db" \
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
@@ -107,8 +107,8 @@ Proceed with replication? [y/N]:
 For automated scripts, skip the confirmation prompt with `--yes` or `-y`:
 
 ```bash
-./neon-seren-replicator init \
-  --source "postgresql://user:pass@neon-host:5432/db" \
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db" \
   --yes
 ```
@@ -118,8 +118,8 @@ For automated scripts, skip the confirmation prompt with `--yes` or `-y`:
 Enable logical replication for ongoing change synchronization:
 
 ```bash
-./neon-seren-replicator sync \
-  --source "postgresql://user:pass@neon-host:5432/db" \
+./postgres-seren-replicator sync \
+  --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
@@ -128,8 +128,8 @@ Enable logical replication for ongoing change synchronization:
 Check replication health and lag in real-time:
 
 ```bash
-./neon-seren-replicator status \
-  --source "postgresql://user:pass@neon-host:5432/db" \
+./postgres-seren-replicator status \
+  --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
@@ -138,8 +138,8 @@ Check replication health and lag in real-time:
 Validate that all tables match:
 
 ```bash
-./neon-seren-replicator verify \
-  --source "postgresql://user:pass@neon-host:5432/db" \
+./postgres-seren-replicator verify \
+  --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
@@ -201,7 +201,7 @@ export TEST_TARGET_URL="postgresql://postgres:postgres@localhost:5433/postgres"
 
 ## Requirements
 
-### Source Database (Neon)
+### Source Database
 
 - PostgreSQL 12 or later
 - Replication privilege (`REPLICATION` role attribute)
@@ -278,7 +278,7 @@ Check status frequently during replication:
 
 ```bash
 # Monitor until lag < 1 second
-watch -n 5 './neon-seren-replicator status --source "$SOURCE" --target "$TARGET"'
+watch -n 5 './postgres-seren-replicator status --source "$SOURCE" --target "$TARGET"'
 ```
 
 ## License
