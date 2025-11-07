@@ -9,11 +9,14 @@ Zero-downtime PostgreSQL replication tool from PostgreSQL to Seren with continuo
 
 ## Overview
 
-This tool enables safe, zero-downtime replication of PostgreSQL databases from any PostgreSQL provider to Seren Cloud. It uses PostgreSQL's logical replication for continuous data synchronization with real-time monitoring.
+This tool enables safe, zero-downtime replication of PostgreSQL databases from any PostgreSQL provider (Neon, AWS RDS, Hetzner, self-hosted, etc.) to Seren Cloud. It uses PostgreSQL's logical replication for continuous data synchronization with real-time monitoring and supports selective replication for fine-grained control over what gets replicated.
 
 ## Features
 
 - **Zero Downtime**: Uses logical replication to keep databases continuously in sync
+- **Selective Replication**: Choose specific databases and tables to replicate
+- **Interactive Mode**: User-friendly terminal UI for selecting what to replicate
+- **Multi-Provider Support**: Works with any PostgreSQL provider (Neon, AWS RDS, Hetzner, self-hosted, etc.)
 - **Size Estimation**: Analyze database sizes and view estimated replication times before starting
 - **High Performance**: Parallel dump/restore with automatic CPU core detection
 - **Optimized Compression**: Maximum compression (level 9) for faster transfers
@@ -113,6 +116,15 @@ For automated scripts, skip the confirmation prompt with `--yes` or `-y`:
   --yes
 ```
 
+If the target database already exists, you can drop and recreate it with `--drop-existing`:
+
+```bash
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/db" \
+  --target "postgresql://user:pass@seren-host:5432/db" \
+  --drop-existing
+```
+
 ### 3. Set Up Continuous Replication
 
 Enable logical replication for ongoing change synchronization:
@@ -142,6 +154,240 @@ Validate that all tables match:
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
+
+## Selective Replication
+
+Selective replication allows you to choose exactly which databases and tables to replicate, giving you fine-grained control over your migration.
+
+### Database-Level Filtering
+
+Replicate only specific databases:
+
+```bash
+# Include only specific databases
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --include-databases "myapp,analytics"
+
+# Exclude specific databases
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --exclude-databases "test,staging"
+```
+
+### Table-Level Filtering
+
+Replicate only specific tables or exclude certain tables:
+
+```bash
+# Include only specific tables (format: database.table)
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --include-tables "myapp.users,myapp.orders,analytics.events"
+
+# Exclude specific tables
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --exclude-tables "myapp.logs,myapp.cache,analytics.temp_data"
+```
+
+### Combined Filtering
+
+Combine database and table filtering for precise control:
+
+```bash
+# Replicate specific databases but exclude certain tables
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --include-databases "myapp,analytics" \
+  --exclude-tables "myapp.logs,analytics.temp_data"
+```
+
+### Filtering with Other Commands
+
+Filtering works with all commands that support it:
+
+```bash
+# Validate with filtering
+./postgres-seren-replicator validate \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --include-databases "myapp"
+
+# Sync with filtering
+./postgres-seren-replicator sync \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --include-databases "myapp,analytics" \
+  --exclude-tables "myapp.logs"
+
+# Status with filtering
+./postgres-seren-replicator status \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --include-databases "myapp"
+
+# Verify with filtering
+./postgres-seren-replicator verify \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --include-databases "myapp" \
+  --exclude-tables "myapp.logs"
+```
+
+## Interactive Mode
+
+Interactive mode provides a user-friendly terminal UI for selecting databases and tables to replicate. This is ideal for exploratory migrations or when you're not sure exactly what you want to replicate.
+
+### Using Interactive Mode
+
+Add the `--interactive` flag to `init`, `validate`, or `sync` commands:
+
+```bash
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres" \
+  --interactive
+```
+
+### Interactive Workflow
+
+1. **Select Databases**: A multi-select checklist shows all available databases. Use arrow keys to navigate, space to select, and enter to confirm.
+
+2. **Select Tables to Exclude** (optional): For each selected database, you can optionally exclude specific tables. If you don't want to exclude any tables, just press enter.
+
+3. **Review Configuration**: The tool shows a summary of what will be replicated, including:
+   - Databases to replicate
+   - Tables to exclude (if any)
+
+4. **Confirm**: You'll be asked to confirm before proceeding.
+
+### Example Interactive Session
+
+```
+Connecting to source database...
+✓ Connected to source
+
+Discovering databases on source...
+✓ Found 4 database(s)
+
+Select databases to replicate:
+(Use arrow keys to navigate, Space to select, Enter to confirm)
+
+> [x] myapp
+  [x] analytics
+  [ ] staging
+  [ ] test
+
+✓ Selected 2 database(s):
+  - myapp
+  - analytics
+
+Discovering tables in database 'myapp'...
+✓ Found 15 table(s) in 'myapp'
+
+Select tables to EXCLUDE from 'myapp' (or press Enter to include all):
+(Use arrow keys to navigate, Space to select, Enter to confirm)
+
+  [ ] users
+  [ ] orders
+  [x] logs
+  [x] cache
+  [ ] products
+
+✓ Excluding 2 table(s) from 'myapp':
+  - myapp.logs
+  - myapp.cache
+
+========================================
+Replication Configuration Summary
+========================================
+
+Databases to replicate: 2
+  ✓ myapp
+  ✓ analytics
+
+Tables to exclude: 2
+  ✗ myapp.logs
+  ✗ myapp.cache
+
+========================================
+
+Proceed with this configuration? [Y/n]:
+```
+
+## Multi-Provider Support
+
+The tool works seamlessly with any PostgreSQL-compatible database provider. Here are examples for common providers:
+
+### Neon
+
+```bash
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@ep-cool-name-123456.us-east-2.aws.neon.tech/mydb" \
+  --target "postgresql://user:pass@seren-host:5432/mydb"
+```
+
+### AWS RDS
+
+```bash
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/mydb" \
+  --target "postgresql://user:pass@seren-host:5432/mydb"
+```
+
+### Hetzner Cloud
+
+```bash
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@postgres-server.hetzner-cloud.de:5432/mydb" \
+  --target "postgresql://user:pass@seren-host:5432/mydb"
+```
+
+### Self-Hosted PostgreSQL
+
+```bash
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@192.168.1.100:5432/mydb" \
+  --target "postgresql://user:pass@seren-host:5432/mydb"
+```
+
+### Provider-Specific Considerations
+
+#### Connection Parameters
+
+All providers support standard PostgreSQL connection strings. Add SSL/TLS parameters as needed:
+
+```bash
+# With SSL mode
+--source "postgresql://user:pass@host:5432/db?sslmode=require"
+
+# With SSL and certificate verification
+--source "postgresql://user:pass@host:5432/db?sslmode=verify-full&sslrootcert=/path/to/ca.crt"
+```
+
+#### Privileges
+
+Ensure your source database user has the required privileges:
+
+```sql
+-- On source (works for all providers)
+ALTER USER myuser WITH REPLICATION;
+GRANT USAGE ON SCHEMA public TO myuser;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO myuser;
+```
+
+#### Provider Limitations
+
+- **AWS RDS**: Requires `rds_replication` role for logical replication
+- **Neon**: Full support for logical replication out of the box
+- **Hetzner**: Standard PostgreSQL, full support
+- **Self-hosted**: Full control, ensure `wal_level = logical` in postgresql.conf
 
 ## Testing
 
