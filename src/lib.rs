@@ -3,6 +3,7 @@
 
 pub mod commands;
 pub mod filters;
+pub mod interactive;
 pub mod migration;
 pub mod postgres;
 pub mod replication;

@@ -142,15 +142,18 @@ async fn main() -> anyhow::Result<()> {
             exclude_tables,
             interactive,
         } => {
-            if interactive {
-                anyhow::bail!("Interactive mode not yet implemented");
-            }
-            let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
-                include_databases,
-                exclude_databases,
-                include_tables,
-                exclude_tables,
-            )?;
+            let filter = if interactive {
+                // Interactive mode - prompt user to select databases and tables
+                postgres_seren_replicator::interactive::select_databases_and_tables(&source).await?
+            } else {
+                // CLI mode - use provided filter arguments
+                postgres_seren_replicator::filters::ReplicationFilter::new(
+                    include_databases,
+                    exclude_databases,
+                    include_tables,
+                    exclude_tables,
+                )?
+            };
             commands::validate(&source, &target, filter).await
         }
         Commands::Init {
@@ -164,15 +167,18 @@ async fn main() -> anyhow::Result<()> {
             interactive,
             drop_existing,
         } => {
-            if interactive {
-                anyhow::bail!("Interactive mode not yet implemented");
-            }
-            let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
-                include_databases,
-                exclude_databases,
-                include_tables,
-                exclude_tables,
-            )?;
+            let filter = if interactive {
+                // Interactive mode - prompt user to select databases and tables
+                postgres_seren_replicator::interactive::select_databases_and_tables(&source).await?
+            } else {
+                // CLI mode - use provided filter arguments
+                postgres_seren_replicator::filters::ReplicationFilter::new(
+                    include_databases,
+                    exclude_databases,
+                    include_tables,
+                    exclude_tables,
+                )?
+            };
             commands::init(&source, &target, yes, filter, drop_existing).await
         }
         Commands::Sync {
@@ -184,15 +190,18 @@ async fn main() -> anyhow::Result<()> {
             exclude_tables,
             interactive,
         } => {
-            if interactive {
-                anyhow::bail!("Interactive mode not yet implemented");
-            }
-            let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
-                include_databases,
-                exclude_databases,
-                include_tables,
-                exclude_tables,
-            )?;
+            let filter = if interactive {
+                // Interactive mode - prompt user to select databases and tables
+                postgres_seren_replicator::interactive::select_databases_and_tables(&source).await?
+            } else {
+                // CLI mode - use provided filter arguments
+                postgres_seren_replicator::filters::ReplicationFilter::new(
+                    include_databases,
+                    exclude_databases,
+                    include_tables,
+                    exclude_tables,
+                )?
+            };
             commands::sync(&source, &target, Some(filter), None, None, None).await
         }
         Commands::Status {
