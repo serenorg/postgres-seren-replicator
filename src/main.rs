@@ -1,7 +1,7 @@
 // ABOUTME: CLI entry point for postgres-seren-replicator
 // ABOUTME: Parses commands and routes to appropriate handlers
 
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use postgres_seren_replicator::commands;
 
 #[derive(Parser)]
@@ -10,6 +10,22 @@ use postgres_seren_replicator::commands;
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+}
+
+#[derive(Args, Clone, Default)]
+struct TableRuleArgs {
+    /// Tables (optionally db.table) to replicate as schema-only
+    #[arg(long = "schema-only-tables", value_delimiter = ',')]
+    schema_only_tables: Vec<String>,
+    /// Table-level filters in the form [db.]table:SQL-predicate (repeatable)
+    #[arg(long = "table-filter")]
+    table_filters: Vec<String>,
+    /// Time filters in the form [db.]table:column:window (e.g., db.metrics:created_at:6 months)
+    #[arg(long = "time-filter")]
+    time_filters: Vec<String>,
+    /// Path to replication-config.toml describing advanced table rules
+    #[arg(long = "config")]
+    config_path: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -60,6 +76,8 @@ enum Commands {
         /// Interactive mode for selecting databases/tables
         #[arg(long)]
         interactive: bool,
+        #[command(flatten)]
+        table_rules: TableRuleArgs,
         /// Drop existing databases on target before copying
         #[arg(long)]
         drop_existing: bool,
@@ -91,6 +109,8 @@ enum Commands {
         /// Interactive mode for selecting databases/tables
         #[arg(long)]
         interactive: bool,
+        #[command(flatten)]
+        table_rules: TableRuleArgs,
         /// Force recreate subscriptions even if they already exist
         #[arg(long)]
         force: bool,
@@ -181,6 +201,7 @@ async fn main() -> anyhow::Result<()> {
             include_tables,
             exclude_tables,
             interactive,
+            table_rules,
             drop_existing,
             no_sync,
             no_resume,
@@ -197,6 +218,8 @@ async fn main() -> anyhow::Result<()> {
                     exclude_tables,
                 )?
             };
+            let table_rule_data = build_table_rules(&table_rules)?;
+            let filter = filter.with_table_rules(table_rule_data);
             let enable_sync = !no_sync; // Invert the flag: by default sync is enabled
             commands::init(
                 &source,
@@ -217,6 +240,7 @@ async fn main() -> anyhow::Result<()> {
             include_tables,
             exclude_tables,
             interactive,
+            table_rules,
             force,
         } => {
             let filter = if interactive {
@@ -231,6 +255,8 @@ async fn main() -> anyhow::Result<()> {
                     exclude_tables,
                 )?
             };
+            let table_rule_data = build_table_rules(&table_rules)?;
+            let filter = filter.with_table_rules(table_rule_data);
             commands::sync(&source, &target, Some(filter), None, None, None, force).await
         }
         Commands::Status {
@@ -264,4 +290,18 @@ async fn main() -> anyhow::Result<()> {
             commands::verify(&source, &target, Some(filter)).await
         }
     }
+}
+
+fn build_table_rules(
+    args: &TableRuleArgs,
+) -> anyhow::Result<postgres_seren_replicator::table_rules::TableRules> {
+    let mut rules = postgres_seren_replicator::table_rules::TableRules::default();
+    if let Some(path) = &args.config_path {
+        let from_file = postgres_seren_replicator::config::load_table_rules_from_file(path)?;
+        rules.merge(from_file);
+    }
+    rules.apply_schema_only_cli(&args.schema_only_tables)?;
+    rules.apply_table_filter_cli(&args.table_filters)?;
+    rules.apply_time_filter_cli(&args.time_filters)?;
+    Ok(rules)
 }

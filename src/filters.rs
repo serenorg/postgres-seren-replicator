@@ -1,6 +1,7 @@
 // ABOUTME: Central filtering logic for selective replication
 // ABOUTME: Handles database and table include/exclude patterns
 
+use crate::table_rules::TableRules;
 use anyhow::{bail, Result};
 use sha2::{Digest, Sha256};
 use tokio_postgres::Client;
@@ -12,6 +13,7 @@ pub struct ReplicationFilter {
     exclude_databases: Option<Vec<String>>,
     include_tables: Option<Vec<String>>, // Format: "db.table"
     exclude_tables: Option<Vec<String>>, // Format: "db.table"
+    table_rules: TableRules,
 }
 
 impl ReplicationFilter {
@@ -57,6 +59,7 @@ impl ReplicationFilter {
             exclude_databases,
             include_tables,
             exclude_tables,
+            table_rules: TableRules::default(),
         })
     }
 
@@ -71,6 +74,7 @@ impl ReplicationFilter {
             && self.exclude_databases.is_none()
             && self.include_tables.is_none()
             && self.exclude_tables.is_none()
+            && self.table_rules.is_empty()
     }
 
     /// Returns a stable fingerprint for the filter configuration
@@ -97,8 +101,27 @@ impl ReplicationFilter {
         hash_option_list(&mut hasher, &self.include_tables);
         hasher.update(b"#");
         hash_option_list(&mut hasher, &self.exclude_tables);
+        hasher.update(b"#");
+        hasher.update(self.table_rules.fingerprint().as_bytes());
 
         format!("{:x}", hasher.finalize())
+    }
+
+    pub fn table_rules(&self) -> &TableRules {
+        &self.table_rules
+    }
+
+    pub fn with_table_rules(mut self, rules: TableRules) -> Self {
+        self.table_rules = rules;
+        self
+    }
+
+    pub fn schema_only_tables(&self, database: &str) -> Vec<String> {
+        self.table_rules.schema_only_tables(database)
+    }
+
+    pub fn predicate_tables(&self, database: &str) -> Vec<(String, String)> {
+        self.table_rules.predicate_tables(database)
     }
 
     /// Gets the list of tables to exclude

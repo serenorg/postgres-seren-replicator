@@ -327,6 +327,23 @@ pub fn sanitize_identifier(identifier: &str) -> String {
         .collect()
 }
 
+/// Quote a PostgreSQL identifier (database, schema, table, column)
+///
+/// Assumes the identifier has already been validated. Escapes embedded quotes
+/// and wraps the identifier in double quotes.
+pub fn quote_ident(identifier: &str) -> String {
+    let mut quoted = String::with_capacity(identifier.len() + 2);
+    quoted.push('"');
+    for ch in identifier.chars() {
+        if ch == '"' {
+            quoted.push('"');
+        }
+        quoted.push(ch);
+    }
+    quoted.push('"');
+    quoted
+}
+
 /// Validate that source and target URLs are different to prevent accidental data loss
 ///
 /// Compares two PostgreSQL connection URLs to ensure they point to different databases.

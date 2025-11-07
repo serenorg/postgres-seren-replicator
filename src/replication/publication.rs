@@ -1,10 +1,11 @@
 // ABOUTME: Publication management for logical replication on source database
 // ABOUTME: Creates and manages PostgreSQL publications for table replication
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use tokio_postgres::Client;
 
 use crate::filters::ReplicationFilter;
+use crate::table_rules::TableRuleKind;
 
 /// Create a publication for tables with optional filtering
 ///
@@ -37,81 +38,100 @@ pub async fn create_publication(
 
     tracing::info!("Creating publication '{}'...", publication_name);
 
-    // Check if table filtering is active
-    let has_table_filter = filter.include_tables().is_some() || filter.exclude_tables().is_some();
+    if filter.is_empty() {
+        let query = format!("CREATE PUBLICATION \"{}\" FOR ALL TABLES", publication_name);
+        return execute_publication_query(client, publication_name, &query).await;
+    }
 
-    let query = if has_table_filter {
-        // Build table list for filtered publication
-        tracing::info!("Building filtered table list for publication...");
+    let tables = crate::migration::list_tables(client).await?;
 
-        // Get all tables in the database
-        let tables = crate::migration::list_tables(client).await?;
+    let mut plain_tables = Vec::new();
+    let mut predicate_tables = Vec::new();
 
-        // Filter tables based on filter rules
-        let filtered_tables: Vec<_> = tables
-            .into_iter()
-            .filter(|table| {
-                // Build full table name in "database.table" format for filtering
-                let table_name = if table.schema == "public" {
-                    table.name.clone()
-                } else {
-                    format!("{}.{}", table.schema, table.name)
-                };
-                filter.should_replicate_table(db_name, &table_name)
-            })
-            .collect();
+    for table in tables {
+        // Build "schema.table" identifier for include/exclude logic
+        let table_identifier = if table.schema == "public" {
+            table.name.clone()
+        } else {
+            format!("{}.{}", table.schema, table.name)
+        };
 
-        if filtered_tables.is_empty() {
-            anyhow::bail!(
-                "No tables match the filter criteria for database '{}'.\n\
-                 Cannot create publication '{}' with empty table list.\n\
-                 Check your --include-tables or --exclude-tables settings.",
-                db_name,
-                publication_name
-            );
+        if !filter.should_replicate_table(db_name, &table_identifier) {
+            continue;
         }
 
-        tracing::info!(
-            "Publication will include {} filtered table(s)",
-            filtered_tables.len()
+        // Validate schema/table names
+        crate::utils::validate_postgres_identifier(&table.schema).with_context(|| {
+            format!(
+                "Invalid schema name '{}' for table '{}': must be a valid PostgreSQL identifier",
+                table.schema, table.name
+            )
+        })?;
+        crate::utils::validate_postgres_identifier(&table.name).with_context(|| {
+            format!(
+                "Invalid table name '{}' in schema '{}': must be a valid PostgreSQL identifier",
+                table.name, table.schema
+            )
+        })?;
+
+        let fq_table = format!("\"{}\".\"{}\"", table.schema, table.name);
+
+        match filter.table_rules().rule_for_table(db_name, &table.name) {
+            Some(TableRuleKind::SchemaOnly) => {
+                tracing::debug!(
+                    "Excluding table '{}' from publication (schema-only)",
+                    table_identifier
+                );
+            }
+            Some(TableRuleKind::Predicate(pred)) => {
+                predicate_tables.push((fq_table, pred));
+            }
+            None => {
+                plain_tables.push(fq_table);
+            }
+        }
+    }
+
+    if plain_tables.is_empty() && predicate_tables.is_empty() {
+        bail!(
+            "No tables available for publication '{}' after applying filters and schema-only rules",
+            publication_name
         );
+    }
 
-        // Build FOR TABLE clause with schema-qualified table names
-        // Validate all schema and table names to prevent SQL injection
-        let table_list: Vec<String> = filtered_tables
+    let has_predicates = !predicate_tables.is_empty();
+    let server_version = get_server_version(client).await?;
+    if has_predicates && server_version < 150000 {
+        bail!(
+            "Table-level predicates require PostgreSQL 15+. Detected server version {}.\n\
+             Upgrade the source database or remove --table-filter/--time-filter for logical replication.",
+            server_version
+        );
+    }
+
+    let mut clauses = Vec::new();
+    clauses.extend(plain_tables);
+    clauses.extend(
+        predicate_tables
             .iter()
-            .map(|t| {
-                // Validate schema name
-                crate::utils::validate_postgres_identifier(&t.schema).with_context(|| {
-                    format!(
-                        "Invalid schema name '{}' for table '{}': must be a valid PostgreSQL identifier",
-                        t.schema, t.name
-                    )
-                })?;
+            .map(|(table, predicate)| format!("{} WHERE ({})", table, predicate)),
+    );
 
-                // Validate table name
-                crate::utils::validate_postgres_identifier(&t.name).with_context(|| {
-                    format!(
-                        "Invalid table name '{}' in schema '{}': must be a valid PostgreSQL identifier",
-                        t.name, t.schema
-                    )
-                })?;
+    let query = format!(
+        "CREATE PUBLICATION \"{}\" FOR TABLE {}",
+        publication_name,
+        clauses.join(", ")
+    );
 
-                Ok(format!("\"{}\".\"{}\"", t.schema, t.name))
-            })
-            .collect::<Result<Vec<_>>>()?;
+    execute_publication_query(client, publication_name, &query).await
+}
 
-        format!(
-            "CREATE PUBLICATION \"{}\" FOR TABLE {}",
-            publication_name,
-            table_list.join(", ")
-        )
-    } else {
-        // No filtering - use FOR ALL TABLES (fast path)
-        format!("CREATE PUBLICATION \"{}\" FOR ALL TABLES", publication_name)
-    };
-
-    match client.execute(&query, &[]).await {
+async fn execute_publication_query(
+    client: &Client,
+    publication_name: &str,
+    query: &str,
+) -> Result<()> {
+    match client.execute(query, &[]).await {
         Ok(_) => {
             tracing::info!("✓ Publication '{}' created successfully", publication_name);
             Ok(())
@@ -155,6 +175,20 @@ pub async fn create_publication(
             }
         }
     }
+}
+
+async fn get_server_version(client: &Client) -> Result<i32> {
+    let row = client
+        .query_one("SHOW server_version_num", &[])
+        .await
+        .context("Failed to query server version")?;
+    let version_str: String = row.get(0);
+    version_str.parse::<i32>().with_context(|| {
+        format!(
+            "Invalid server_version_num '{}'. Expected integer.",
+            version_str
+        )
+    })
 }
 
 /// List all publications in the database

@@ -196,6 +196,7 @@ pub async fn init(
     // Step 4: Replicate each database
     tracing::info!("Step 4/4: Replicating databases...");
     for (idx, db_info) in databases.iter().enumerate() {
+        let filtered_tables = filter.predicate_tables(&db_info.name);
         if checkpoint_state.is_completed(&db_info.name) {
             tracing::info!(
                 "Skipping database '{}' (already completed per checkpoint)",
@@ -294,6 +295,19 @@ pub async fn init(
 
         tracing::info!("  Restoring data for '{}'...", db_info.name);
         migration::restore_data(&target_db_url, data_dir.to_str().unwrap()).await?;
+
+        if !filtered_tables.is_empty() {
+            tracing::info!(
+                "  Applying filtered replication for {} table(s)...",
+                filtered_tables.len()
+            );
+            migration::filtered::copy_filtered_tables(
+                &source_db_url,
+                &target_db_url,
+                &filtered_tables,
+            )
+            .await?;
+        }
 
         tracing::info!("✓ Database '{}' replicated successfully", db_info.name);
 

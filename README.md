@@ -137,6 +137,8 @@ Enable logical replication for ongoing change synchronization:
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
+> **Note:** Table-level predicates (`--table-filter`, `--time-filter`, or config file rules) require PostgreSQL 15+ on the source so publications can use `WHERE` clauses. Schema-only tables work on all supported versions.
+
 ### 4. Monitor Replication Status
 
 Check replication health and lag in real-time:
@@ -197,18 +199,73 @@ Replicate only specific tables or exclude certain tables:
   --exclude-tables "myapp.logs,myapp.cache,analytics.temp_data"
 ```
 
-### Combined Filtering
+### Schema-Only Tables (Structure Only)
 
-Combine database and table filtering for precise control:
+Skip data for heavy archives while keeping the schema in sync:
 
 ```bash
-# Replicate specific databases but exclude certain tables
+./postgres-seren-replicator init \
+  --source "$SRC" \
+  --target "$TGT" \
+  --schema-only-tables "myapp.audit_logs,analytics.evmlog_strides"
+```
+
+Schema-only tables are recreated with full DDL but no rows, which dramatically reduces dump/restore time for historical partitions or archived hypertables.
+
+### Partial Data with WHERE Clauses
+
+Filter tables down to the rows you actually need:
+
+```bash
+./postgres-seren-replicator init \
+  --source "$SRC" \
+  --target "$TGT" \
+  --table-filter "output:series_time >= NOW() - INTERVAL '6 months'" \
+  --table-filter "transactions:status IN ('active','pending')"
+```
+
+Each `--table-filter` takes `[db.]table:SQL predicate`. During `init`, data is streamed with `COPY (SELECT ... WHERE predicate)`; during `sync`, we create PostgreSQL publications that emit only rows matching those predicates (requires PostgreSQL 15+ on the source).
+
+### Time-Based Filters (Shorthand)
+
+For time-series tables (e.g., TimescaleDB hypertables) use the shorthand `table:column:window`:
+
+```bash
+./postgres-seren-replicator init \
+  --source "$SRC" \
+  --target "$TGT" \
+  --time-filter "metrics:created_at:6 months" \
+  --time-filter "billing_events:event_time:1 year"
+```
+
+Supported window units: seconds, minutes, hours, days, weeks, months, and years. The shorthand expands to `column >= NOW() - INTERVAL 'window'`.
+
+### Combined Filtering
+
+Combine database, table, and predicate filtering for precise control:
+
+```bash
 ./postgres-seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@seren-host:5432/postgres" \
   --include-databases "myapp,analytics" \
-  --exclude-tables "myapp.logs,analytics.temp_data"
+  --exclude-tables "myapp.logs" \
+  --schema-only-tables "analytics.evmlog_strides" \
+  --time-filter "analytics.metrics:created_at:6 months"
 ```
+
+### Configuration File (Complex Rules)
+
+Large migrations often need different rules per database. Describe them in TOML and pass `--config` to both `init` and `sync`:
+
+```bash
+./postgres-seren-replicator init \
+  --source "$SRC" \
+  --target "$TGT" \
+  --config replication-config.toml
+```
+
+See [docs/replication-config.md](docs/replication-config.md) for the full schema (schema-only lists, table filters, time filters, and TimescaleDB tips). CLI flags merge on top of the file so you can override a single table without editing the config.
 
 ### Filtering with Other Commands
 

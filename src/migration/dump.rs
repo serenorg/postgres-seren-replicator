@@ -3,6 +3,7 @@
 
 use crate::filters::ReplicationFilter;
 use anyhow::{bail, Context, Result};
+use std::collections::BTreeSet;
 use std::process::{Command, Stdio};
 
 /// Dump global objects (roles, tablespaces) using pg_dumpall
@@ -197,19 +198,30 @@ pub async fn dump_data(
 
 /// Extract table names for a specific database from exclude_tables filter
 fn get_excluded_tables_for_db(filter: &ReplicationFilter, db_name: &str) -> Option<Vec<String>> {
-    filter.exclude_tables().map(|tables| {
-        tables
-            .iter()
-            .filter_map(|full_name| {
-                let parts: Vec<&str> = full_name.split('.').collect();
-                if parts.len() == 2 && parts[0] == db_name {
-                    Some(parts[1].to_string())
-                } else {
-                    None
-                }
-            })
-            .collect()
-    })
+    let mut tables = BTreeSet::new();
+
+    if let Some(explicit) = filter.exclude_tables() {
+        for full_name in explicit {
+            let parts: Vec<&str> = full_name.split('.').collect();
+            if parts.len() == 2 && parts[0] == db_name {
+                tables.insert(parts[1].to_string());
+            }
+        }
+    }
+
+    for table in filter.schema_only_tables(db_name) {
+        tables.insert(table);
+    }
+
+    for (table, _) in filter.predicate_tables(db_name) {
+        tables.insert(table);
+    }
+
+    if tables.is_empty() {
+        None
+    } else {
+        Some(tables.into_iter().collect())
+    }
 }
 
 /// Extract table names for a specific database from include_tables filter
