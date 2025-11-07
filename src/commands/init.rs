@@ -4,7 +4,6 @@
 use crate::{migration, postgres};
 use anyhow::{bail, Context, Result};
 use std::io::{self, Write};
-use tempfile::TempDir;
 use tokio_postgres::Client;
 
 /// Initial replication command for snapshot schema and data copy
@@ -80,10 +79,10 @@ pub async fn init(
         .context("Source and target validation failed")?;
     tracing::info!("✓ Verified source and target are different databases");
 
-    // Create temporary directory for dump files
-    // TempDir automatically cleans up on drop, even if errors occur
-    let temp_dir = TempDir::new().context("Failed to create temp directory")?;
-    let temp_path = temp_dir.path();
+    // Create managed temporary directory for dump files
+    // Unlike TempDir, this survives SIGKILL and is cleaned up on next startup
+    let temp_path =
+        crate::utils::create_managed_temp_dir().context("Failed to create temp directory")?;
     tracing::debug!("Using temp directory: {}", temp_path.display());
 
     // Step 1: Dump global objects
@@ -229,6 +228,13 @@ pub async fn init(
         migration::restore_data(&target_db_url, data_dir.to_str().unwrap()).await?;
 
         tracing::info!("✓ Database '{}' replicated successfully", db_info.name);
+    }
+
+    // Explicitly clean up temp directory
+    // (This runs on normal completion; startup cleanup handles SIGKILL cases)
+    if let Err(e) = crate::utils::remove_managed_temp_dir(&temp_path) {
+        tracing::warn!("Failed to clean up temp directory: {}", e);
+        // Don't fail the entire operation if cleanup fails
     }
 
     tracing::info!("✅ Initial replication complete");

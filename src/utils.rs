@@ -478,6 +478,223 @@ struct PostgresUrlParts {
     user: Option<String>,
 }
 
+/// Create a managed temporary directory with explicit cleanup support
+///
+/// Creates a temporary directory with a timestamped name that can be cleaned up
+/// even if the process is killed with SIGKILL. Unlike `TempDir::new()` which
+/// relies on the Drop trait, this function creates named directories that can
+/// be cleaned up on next process startup.
+///
+/// Directory naming format: `postgres-seren-replicator-{timestamp}-{random}`
+/// Example: `postgres-seren-replicator-20250106-120534-a3b2c1d4`
+///
+/// # Returns
+///
+/// Returns the path to the created temporary directory.
+///
+/// # Errors
+///
+/// Returns an error if the directory cannot be created.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use postgres_seren_replicator::utils::create_managed_temp_dir;
+/// # use anyhow::Result;
+/// # fn example() -> Result<()> {
+/// let temp_path = create_managed_temp_dir()?;
+/// println!("Using temp directory: {}", temp_path.display());
+/// // ... do work ...
+/// // Cleanup happens automatically on next startup via cleanup_stale_temp_dirs()
+/// # Ok(())
+/// # }
+/// ```
+pub fn create_managed_temp_dir() -> Result<std::path::PathBuf> {
+    use std::fs;
+    use std::time::SystemTime;
+
+    let system_temp = std::env::temp_dir();
+
+    // Generate timestamp for directory name
+    let timestamp = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    // Generate random suffix for uniqueness
+    let random: u32 = rand::random();
+
+    // Create directory name with timestamp and random suffix
+    let dir_name = format!("postgres-seren-replicator-{}-{:08x}", timestamp, random);
+
+    let temp_path = system_temp.join(dir_name);
+
+    // Create the directory
+    fs::create_dir_all(&temp_path)
+        .with_context(|| format!("Failed to create temp directory at {}", temp_path.display()))?;
+
+    tracing::debug!("Created managed temp directory: {}", temp_path.display());
+
+    Ok(temp_path)
+}
+
+/// Clean up stale temporary directories from previous runs
+///
+/// Removes temporary directories created by `create_managed_temp_dir()` that are
+/// older than the specified age. This should be called on process startup to clean
+/// up directories left behind by processes killed with SIGKILL.
+///
+/// Only directories matching the pattern `postgres-seren-replicator-*` are removed.
+///
+/// # Arguments
+///
+/// * `max_age_secs` - Maximum age in seconds before a directory is considered stale
+///   (recommended: 86400 for 24 hours)
+///
+/// # Returns
+///
+/// Returns the number of directories cleaned up.
+///
+/// # Errors
+///
+/// Returns an error if the system temp directory cannot be read. Individual
+/// directory removal errors are logged but don't fail the entire operation.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use postgres_seren_replicator::utils::cleanup_stale_temp_dirs;
+/// # use anyhow::Result;
+/// # fn example() -> Result<()> {
+/// // Clean up temp directories older than 24 hours
+/// let cleaned = cleanup_stale_temp_dirs(86400)?;
+/// println!("Cleaned up {} stale temp directories", cleaned);
+/// # Ok(())
+/// # }
+/// ```
+pub fn cleanup_stale_temp_dirs(max_age_secs: u64) -> Result<usize> {
+    use std::fs;
+    use std::time::SystemTime;
+
+    let system_temp = std::env::temp_dir();
+    let now = SystemTime::now();
+    let mut cleaned_count = 0;
+
+    // Read all entries in system temp directory
+    let entries = fs::read_dir(&system_temp).with_context(|| {
+        format!(
+            "Failed to read system temp directory: {}",
+            system_temp.display()
+        )
+    })?;
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+
+        // Only process directories matching our naming pattern
+        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+            if !name.starts_with("postgres-seren-replicator-") {
+                continue;
+            }
+
+            // Check directory age
+            match entry.metadata() {
+                Ok(metadata) => {
+                    if let Ok(modified) = metadata.modified() {
+                        if let Ok(age) = now.duration_since(modified) {
+                            if age.as_secs() > max_age_secs {
+                                // Directory is stale, remove it
+                                match fs::remove_dir_all(&path) {
+                                    Ok(_) => {
+                                        tracing::info!(
+                                            "Cleaned up stale temp directory: {} (age: {}s)",
+                                            path.display(),
+                                            age.as_secs()
+                                        );
+                                        cleaned_count += 1;
+                                    }
+                                    Err(e) => {
+                                        tracing::warn!(
+                                            "Failed to remove stale temp directory {}: {}",
+                                            path.display(),
+                                            e
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to get metadata for temp directory {}: {}",
+                        path.display(),
+                        e
+                    );
+                }
+            }
+        }
+    }
+
+    if cleaned_count > 0 {
+        tracing::info!(
+            "Cleaned up {} stale temp directory(ies) older than {} seconds",
+            cleaned_count,
+            max_age_secs
+        );
+    }
+
+    Ok(cleaned_count)
+}
+
+/// Remove a managed temporary directory
+///
+/// Explicitly removes a temporary directory created by `create_managed_temp_dir()`.
+/// This should be called when the directory is no longer needed.
+///
+/// # Arguments
+///
+/// * `path` - Path to the temporary directory to remove
+///
+/// # Errors
+///
+/// Returns an error if the directory cannot be removed.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use postgres_seren_replicator::utils::{create_managed_temp_dir, remove_managed_temp_dir};
+/// # use anyhow::Result;
+/// # fn example() -> Result<()> {
+/// let temp_path = create_managed_temp_dir()?;
+/// // ... do work ...
+/// remove_managed_temp_dir(&temp_path)?;
+/// # Ok(())
+/// # }
+/// ```
+pub fn remove_managed_temp_dir(path: &std::path::Path) -> Result<()> {
+    use std::fs;
+
+    // Verify this is one of our temp directories (safety check)
+    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+        if !name.starts_with("postgres-seren-replicator-") {
+            bail!(
+                "Refusing to remove directory that doesn't match our naming pattern: {}",
+                path.display()
+            );
+        }
+    } else {
+        bail!("Invalid temp directory path: {}", path.display());
+    }
+
+    tracing::debug!("Removing managed temp directory: {}", path.display());
+
+    fs::remove_dir_all(path)
+        .with_context(|| format!("Failed to remove temp directory at {}", path.display()))?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

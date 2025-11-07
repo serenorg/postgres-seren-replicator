@@ -130,6 +130,13 @@ async fn main() -> anyhow::Result<()> {
         )
         .init();
 
+    // Clean up stale temp directories from previous runs (older than 24 hours)
+    // This handles temp files left behind by processes killed with SIGKILL
+    if let Err(e) = postgres_seren_replicator::utils::cleanup_stale_temp_dirs(86400) {
+        tracing::warn!("Failed to clean up stale temp directories: {}", e);
+        // Don't fail startup if cleanup fails
+    }
+
     let cli = Cli::parse();
 
     match cli.command {
