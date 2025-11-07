@@ -4,11 +4,82 @@
 use anyhow::{Context, Result};
 use tokio_postgres::Client;
 
-/// Create a publication for all tables
-pub async fn create_publication(client: &Client, publication_name: &str) -> Result<()> {
+use crate::filters::ReplicationFilter;
+
+/// Create a publication for tables with optional filtering
+///
+/// When table filters are specified, creates a publication for only the filtered tables.
+/// Without filters, creates a publication for all tables.
+///
+/// # Arguments
+///
+/// * `client` - Connected client to the database
+/// * `db_name` - Name of the database (for filtering context)
+/// * `publication_name` - Name of the publication to create
+/// * `filter` - Replication filter for table inclusion/exclusion
+///
+/// # Returns
+///
+/// Returns `Ok(())` if publication is created or already exists
+pub async fn create_publication(
+    client: &Client,
+    db_name: &str,
+    publication_name: &str,
+    filter: &ReplicationFilter,
+) -> Result<()> {
     tracing::info!("Creating publication '{}'...", publication_name);
 
-    let query = format!("CREATE PUBLICATION \"{}\" FOR ALL TABLES", publication_name);
+    // Check if table filtering is active
+    let has_table_filter = filter.include_tables().is_some() || filter.exclude_tables().is_some();
+
+    let query = if has_table_filter {
+        // Build table list for filtered publication
+        tracing::info!("Building filtered table list for publication...");
+
+        // Get all tables in the database
+        let tables = crate::migration::list_tables(client).await?;
+
+        // Filter tables based on filter rules
+        let filtered_tables: Vec<_> = tables
+            .into_iter()
+            .filter(|table| {
+                // Build full table name in "database.table" format for filtering
+                let table_name = if table.schema == "public" {
+                    table.name.clone()
+                } else {
+                    format!("{}.{}", table.schema, table.name)
+                };
+                filter.should_replicate_table(db_name, &table_name)
+            })
+            .collect();
+
+        if filtered_tables.is_empty() {
+            anyhow::bail!(
+                "No tables match the filter criteria for database '{}'.\n\
+                 Cannot create publication '{}' with empty table list.\n\
+                 Check your --include-tables or --exclude-tables settings.",
+                db_name,
+                publication_name
+            );
+        }
+
+        tracing::info!("Publication will include {} filtered table(s)", filtered_tables.len());
+
+        // Build FOR TABLE clause with schema-qualified table names
+        let table_list: Vec<String> = filtered_tables
+            .iter()
+            .map(|t| format!("\"{}\".\"{}\"", t.schema, t.name))
+            .collect();
+
+        format!(
+            "CREATE PUBLICATION \"{}\" FOR TABLE {}",
+            publication_name,
+            table_list.join(", ")
+        )
+    } else {
+        // No filtering - use FOR ALL TABLES (fast path)
+        format!("CREATE PUBLICATION \"{}\" FOR ALL TABLES", publication_name)
+    };
 
     match client.execute(&query, &[]).await {
         Ok(_) => {
@@ -95,12 +166,14 @@ mod tests {
         let client = connect(&url).await.unwrap();
 
         let pub_name = "test_publication";
+        let db_name = "postgres"; // Assume testing on postgres database
+        let filter = ReplicationFilter::empty();
 
         // Clean up if exists
         let _ = drop_publication(&client, pub_name).await;
 
         // Create publication
-        let result = create_publication(&client, pub_name).await;
+        let result = create_publication(&client, db_name, pub_name, &filter).await;
         match &result {
             Ok(_) => println!("✓ Publication created successfully"),
             Err(e) => {
@@ -130,9 +203,11 @@ mod tests {
         let client = connect(&url).await.unwrap();
 
         let pub_name = "test_drop_publication";
+        let db_name = "postgres";
+        let filter = ReplicationFilter::empty();
 
         // Create publication
-        create_publication(&client, pub_name).await.unwrap();
+        create_publication(&client, db_name, pub_name, &filter).await.unwrap();
 
         // Drop it
         let result = drop_publication(&client, pub_name).await;

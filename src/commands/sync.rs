@@ -55,7 +55,7 @@ use anyhow::{Context, Result};
 pub async fn sync(
     source_url: &str,
     target_url: &str,
-    _filter: Option<crate::filters::ReplicationFilter>,
+    filter: Option<crate::filters::ReplicationFilter>,
     publication_name: Option<&str>,
     subscription_name: Option<&str>,
     sync_timeout_secs: Option<u64>,
@@ -63,6 +63,7 @@ pub async fn sync(
     let pub_name = publication_name.unwrap_or("seren_migration_pub");
     let sub_name = subscription_name.unwrap_or("seren_migration_sub");
     let timeout = sync_timeout_secs.unwrap_or(300); // 5 minutes default
+    let filter = filter.unwrap_or_else(crate::filters::ReplicationFilter::empty);
 
     tracing::info!("Starting logical replication setup...");
     tracing::info!("Publication: '{}'", pub_name);
@@ -82,9 +83,13 @@ pub async fn sync(
         .context("Failed to connect to target database")?;
     tracing::info!("✓ Connected to target");
 
+    // Extract database name from source URL for filter context
+    let db_name = extract_database_from_url(source_url)
+        .context("Failed to extract database name from source URL")?;
+
     // Create publication on source
     tracing::info!("Creating publication on source database...");
-    create_publication(&source_client, pub_name)
+    create_publication(&source_client, &db_name, pub_name, &filter)
         .await
         .context("Failed to create publication on source")?;
 
@@ -117,6 +122,29 @@ pub async fn sync(
     tracing::info!("  3. When ready, cutover to the target database");
 
     Ok(())
+}
+
+/// Extract database name from a PostgreSQL connection URL
+///
+/// # Arguments
+///
+/// * `url` - PostgreSQL connection URL (format: postgresql://user:pass@host:port/database?params)
+///
+/// # Returns
+///
+/// Database name extracted from the URL
+fn extract_database_from_url(url: &str) -> Result<String> {
+    // Split by '?' to remove query parameters
+    let base_url = url.split('?').next().unwrap_or(url);
+
+    // Split by '/' to get the database name (last part)
+    let parts: Vec<&str> = base_url.rsplitn(2, '/').collect();
+
+    if parts.is_empty() || parts[0].is_empty() {
+        anyhow::bail!("Invalid connection URL format: cannot extract database name");
+    }
+
+    Ok(parts[0].to_string())
 }
 
 #[cfg(test)]

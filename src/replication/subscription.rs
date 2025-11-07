@@ -218,9 +218,11 @@ mod tests {
 
         let sub_name = "test_subscription";
         let pub_name = "test_publication";
+        let db_name = "postgres"; // Assume testing on postgres database
+        let filter = crate::filters::ReplicationFilter::empty();
 
         // Create publication on source
-        crate::replication::create_publication(&source_client, pub_name)
+        crate::replication::create_publication(&source_client, db_name, pub_name, &filter)
             .await
             .unwrap();
 
@@ -265,9 +267,11 @@ mod tests {
 
         let sub_name = "test_drop_subscription";
         let pub_name = "test_drop_publication";
+        let db_name = "postgres";
+        let filter = crate::filters::ReplicationFilter::empty();
 
         // Create publication on source
-        crate::replication::create_publication(&source_client, pub_name)
+        crate::replication::create_publication(&source_client, db_name, pub_name, &filter)
             .await
             .unwrap();
 
@@ -301,9 +305,11 @@ mod tests {
 
         let sub_name = "test_wait_subscription";
         let pub_name = "test_wait_publication";
+        let db_name = "postgres";
+        let filter = crate::filters::ReplicationFilter::empty();
 
         // Create publication on source
-        crate::replication::create_publication(&source_client, pub_name)
+        crate::replication::create_publication(&source_client, db_name, pub_name, &filter)
             .await
             .unwrap();
 

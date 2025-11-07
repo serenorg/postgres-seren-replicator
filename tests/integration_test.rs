@@ -330,3 +330,72 @@ async fn test_init_with_table_filter() {
         }
     }
 }
+
+#[tokio::test]
+#[ignore]
+async fn test_sync_with_table_filter() {
+    let (source_url, target_url) =
+        get_test_urls().expect("TEST_SOURCE_URL and TEST_TARGET_URL must be set");
+
+    println!("Testing sync command with table filter...");
+    println!("⚠ WARNING: This will set up filtered logical replication!");
+
+    // Create filter that excludes certain tables
+    // This test assumes the database has some tables to filter
+    let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+        None,
+        None,
+        None,
+        Some(vec![
+            "postgres.pg_stat_statements".to_string(), // Example system table to exclude
+        ]),
+    )
+    .expect("Failed to create filter");
+
+    // Use unique names for this test
+    let pub_name = "test_filtered_pub";
+    let sub_name = "test_filtered_sub";
+    let timeout = 60; // 1 minute timeout for test
+
+    let result = commands::sync(
+        &source_url,
+        &target_url,
+        Some(filter),
+        Some(pub_name),
+        Some(sub_name),
+        Some(timeout),
+    )
+    .await;
+
+    match &result {
+        Ok(_) => {
+            println!("✓ Sync with table filter completed successfully");
+
+            // Clean up
+            let target_client = postgres_seren_replicator::postgres::connect(&target_url)
+                .await
+                .unwrap();
+            let _ =
+                postgres_seren_replicator::replication::drop_subscription(&target_client, sub_name)
+                    .await;
+
+            let source_client = postgres_seren_replicator::postgres::connect(&source_url)
+                .await
+                .unwrap();
+            let _ =
+                postgres_seren_replicator::replication::drop_publication(&source_client, pub_name)
+                    .await;
+        }
+        Err(e) => {
+            println!("Sync with table filter failed: {:?}", e);
+            // If either database doesn't support logical replication, skip
+            if e.to_string().contains("not supported")
+                || e.to_string().contains("permission")
+                || e.to_string().contains("wal_level")
+            {
+                println!("Skipping test - database might not support logical replication");
+                return;
+            }
+        }
+    }
+}
