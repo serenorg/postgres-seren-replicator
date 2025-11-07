@@ -27,6 +27,14 @@ pub async fn create_publication(
     publication_name: &str,
     filter: &ReplicationFilter,
 ) -> Result<()> {
+    // Validate publication name to prevent SQL injection
+    crate::utils::validate_postgres_identifier(publication_name).with_context(|| {
+        format!(
+            "Invalid publication name '{}': must be a valid PostgreSQL identifier",
+            publication_name
+        )
+    })?;
+
     tracing::info!("Creating publication '{}'...", publication_name);
 
     // Check if table filtering is active
@@ -69,10 +77,29 @@ pub async fn create_publication(
         );
 
         // Build FOR TABLE clause with schema-qualified table names
+        // Validate all schema and table names to prevent SQL injection
         let table_list: Vec<String> = filtered_tables
             .iter()
-            .map(|t| format!("\"{}\".\"{}\"", t.schema, t.name))
-            .collect();
+            .map(|t| {
+                // Validate schema name
+                crate::utils::validate_postgres_identifier(&t.schema).with_context(|| {
+                    format!(
+                        "Invalid schema name '{}' for table '{}': must be a valid PostgreSQL identifier",
+                        t.schema, t.name
+                    )
+                })?;
+
+                // Validate table name
+                crate::utils::validate_postgres_identifier(&t.name).with_context(|| {
+                    format!(
+                        "Invalid table name '{}' in schema '{}': must be a valid PostgreSQL identifier",
+                        t.name, t.schema
+                    )
+                })?;
+
+                Ok(format!("\"{}\".\"{}\"", t.schema, t.name))
+            })
+            .collect::<Result<Vec<_>>>()?;
 
         format!(
             "CREATE PUBLICATION \"{}\" FOR TABLE {}",
@@ -144,6 +171,14 @@ pub async fn list_publications(client: &Client) -> Result<Vec<String>> {
 
 /// Drop a publication
 pub async fn drop_publication(client: &Client, publication_name: &str) -> Result<()> {
+    // Validate publication name to prevent SQL injection
+    crate::utils::validate_postgres_identifier(publication_name).with_context(|| {
+        format!(
+            "Invalid publication name '{}': must be a valid PostgreSQL identifier",
+            publication_name
+        )
+    })?;
+
     tracing::info!("Dropping publication '{}'...", publication_name);
 
     let query = format!("DROP PUBLICATION IF EXISTS \"{}\"", publication_name);

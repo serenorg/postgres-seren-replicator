@@ -12,6 +12,22 @@ pub async fn create_subscription(
     source_connection_string: &str,
     publication_name: &str,
 ) -> Result<()> {
+    // Validate subscription name to prevent SQL injection
+    crate::utils::validate_postgres_identifier(subscription_name).with_context(|| {
+        format!(
+            "Invalid subscription name '{}': must be a valid PostgreSQL identifier",
+            subscription_name
+        )
+    })?;
+
+    // Validate publication name to prevent SQL injection
+    crate::utils::validate_postgres_identifier(publication_name).with_context(|| {
+        format!(
+            "Invalid publication name '{}': must be a valid PostgreSQL identifier",
+            publication_name
+        )
+    })?;
+
     tracing::info!("Creating subscription '{}'...", subscription_name);
 
     let query = format!(
@@ -109,6 +125,14 @@ pub async fn list_subscriptions(client: &Client) -> Result<Vec<String>> {
 
 /// Drop a subscription
 pub async fn drop_subscription(client: &Client, subscription_name: &str) -> Result<()> {
+    // Validate subscription name to prevent SQL injection
+    crate::utils::validate_postgres_identifier(subscription_name).with_context(|| {
+        format!(
+            "Invalid subscription name '{}': must be a valid PostgreSQL identifier",
+            subscription_name
+        )
+    })?;
+
     tracing::info!("Dropping subscription '{}'...", subscription_name);
 
     let query = format!("DROP SUBSCRIPTION IF EXISTS \"{}\"", subscription_name);
