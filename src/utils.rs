@@ -231,6 +231,102 @@ pub fn sanitize_identifier(identifier: &str) -> String {
         .collect()
 }
 
+/// Validate a PostgreSQL identifier (database name, schema name, table name, etc.)
+///
+/// Validates that an identifier follows PostgreSQL naming rules to prevent SQL injection.
+/// PostgreSQL identifiers must:
+/// - Be 1-63 characters long
+/// - Start with a letter (a-z, A-Z) or underscore (_)
+/// - Contain only letters, digits (0-9), or underscores
+///
+/// # Arguments
+///
+/// * `identifier` - The identifier to validate (database name, schema name, table name, etc.)
+///
+/// # Returns
+///
+/// Returns `Ok(())` if the identifier is valid.
+///
+/// # Errors
+///
+/// Returns an error if the identifier:
+/// - Is empty or whitespace-only
+/// - Exceeds 63 characters
+/// - Starts with an invalid character (digit or special character)
+/// - Contains invalid characters (anything except a-z, A-Z, 0-9, _)
+///
+/// # Security
+///
+/// This function is critical for preventing SQL injection attacks. All database
+/// names, schema names, table names, and other identifiers from untrusted sources
+/// MUST be validated before use in SQL statements.
+///
+/// # Examples
+///
+/// ```
+/// # use postgres_seren_replicator::utils::validate_postgres_identifier;
+/// # use anyhow::Result;
+/// # fn example() -> Result<()> {
+/// // Valid identifiers
+/// validate_postgres_identifier("mydb")?;
+/// validate_postgres_identifier("my_table")?;
+/// validate_postgres_identifier("_private_schema")?;
+///
+/// // Invalid - will return error
+/// assert!(validate_postgres_identifier("123table").is_err());
+/// assert!(validate_postgres_identifier("my-table").is_err());
+/// assert!(validate_postgres_identifier("table\"; DROP TABLE users; --").is_err());
+/// # Ok(())
+/// # }
+/// ```
+pub fn validate_postgres_identifier(identifier: &str) -> Result<()> {
+    // Check for empty or whitespace-only
+    let trimmed = identifier.trim();
+    if trimmed.is_empty() {
+        bail!("Identifier cannot be empty or whitespace-only");
+    }
+
+    // Check length (PostgreSQL limit is 63 characters)
+    if trimmed.len() > 63 {
+        bail!(
+            "Identifier '{}' exceeds maximum length of 63 characters (got {})",
+            sanitize_identifier(trimmed),
+            trimmed.len()
+        );
+    }
+
+    // Get first character
+    let first_char = trimmed.chars().next().unwrap();
+
+    // First character must be a letter or underscore
+    if !first_char.is_ascii_alphabetic() && first_char != '_' {
+        bail!(
+            "Identifier '{}' must start with a letter or underscore, not '{}'",
+            sanitize_identifier(trimmed),
+            first_char
+        );
+    }
+
+    // All characters must be alphanumeric or underscore
+    for (i, c) in trimmed.chars().enumerate() {
+        if !c.is_ascii_alphanumeric() && c != '_' {
+            bail!(
+                "Identifier '{}' contains invalid character '{}' at position {}. \
+                 Only letters, digits, and underscores are allowed",
+                sanitize_identifier(trimmed),
+                if c.is_control() {
+                    format!("\\x{:02x}", c as u32)
+                } else {
+                    c.to_string()
+                },
+                i
+            );
+        }
+    }
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
