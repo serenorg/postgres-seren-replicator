@@ -125,6 +125,8 @@ If the target database already exists, you can drop and recreate it with `--drop
   --drop-existing
 ```
 
+The init command automatically checkpoints after each database finishes so you can rerun it if a later step fails. The next run will skip completed databases and continue with the remaining ones. Pass `--no-resume` if you want to discard any previous checkpoint and start from scratch (a new checkpoint is created for the fresh run).
+
 ### 3. Set Up Continuous Replication
 
 Enable logical replication for ongoing change synchronization:

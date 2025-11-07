@@ -2,6 +2,7 @@
 // ABOUTME: Handles database and table include/exclude patterns
 
 use anyhow::{bail, Result};
+use sha2::{Digest, Sha256};
 use tokio_postgres::Client;
 
 /// Represents replication filtering rules
@@ -70,6 +71,34 @@ impl ReplicationFilter {
             && self.exclude_databases.is_none()
             && self.include_tables.is_none()
             && self.exclude_tables.is_none()
+    }
+
+    /// Returns a stable fingerprint for the filter configuration
+    pub fn fingerprint(&self) -> String {
+        fn hash_option_list(hasher: &mut Sha256, values: &Option<Vec<String>>) {
+            match values {
+                Some(items) => {
+                    let mut sorted = items.clone();
+                    sorted.sort();
+                    for item in sorted {
+                        hasher.update(item.as_bytes());
+                        hasher.update(b"|");
+                    }
+                }
+                None => hasher.update(b"<none>"),
+            }
+        }
+
+        let mut hasher = Sha256::new();
+        hash_option_list(&mut hasher, &self.include_databases);
+        hasher.update(b"#");
+        hash_option_list(&mut hasher, &self.exclude_databases);
+        hasher.update(b"#");
+        hash_option_list(&mut hasher, &self.include_tables);
+        hasher.update(b"#");
+        hash_option_list(&mut hasher, &self.exclude_tables);
+
+        format!("{:x}", hasher.finalize())
     }
 
     /// Gets the list of tables to exclude
@@ -315,5 +344,35 @@ mod tests {
         let filter =
             ReplicationFilter::new(None, None, None, Some(vec!["db1.table1".to_string()])).unwrap();
         assert!(!filter.is_empty());
+    }
+
+    #[test]
+    fn test_fingerprint_is_order_insensitive() {
+        let filter_a = ReplicationFilter::new(
+            Some(vec!["db1".to_string(), "db2".to_string()]),
+            None,
+            None,
+            None,
+        )
+        .unwrap();
+        let filter_b = ReplicationFilter::new(
+            Some(vec!["db2".to_string(), "db1".to_string()]),
+            None,
+            None,
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(filter_a.fingerprint(), filter_b.fingerprint());
+    }
+
+    #[test]
+    fn test_fingerprint_differs_for_different_filters() {
+        let filter_a =
+            ReplicationFilter::new(None, Some(vec!["db1".to_string()]), None, None).unwrap();
+        let filter_b =
+            ReplicationFilter::new(None, Some(vec!["db2".to_string()]), None, None).unwrap();
+
+        assert_ne!(filter_a.fingerprint(), filter_b.fingerprint());
     }
 }

@@ -1,7 +1,7 @@
 // ABOUTME: Initial replication command for snapshot schema and data copy
 // ABOUTME: Performs full database dump and restore from source to target
 
-use crate::{migration, postgres};
+use crate::{checkpoint, migration, postgres};
 use anyhow::{bail, Context, Result};
 use std::io::{self, Write};
 use tokio_postgres::Client;
@@ -27,6 +27,7 @@ use tokio_postgres::Client;
 /// * `filter` - Database and table filtering rules
 /// * `drop_existing` - Drop existing databases on target before copying
 /// * `enable_sync` - Set up continuous logical replication after snapshot (default: true)
+/// * `allow_resume` - Resume from checkpoint if available (default: true)
 ///
 /// # Returns
 ///
@@ -57,7 +58,8 @@ use tokio_postgres::Client;
 ///     false,
 ///     ReplicationFilter::empty(),
 ///     false,
-///     true  // Enable continuous replication
+///     true,  // Enable continuous replication
+///     true   // Allow resume
 /// ).await?;
 ///
 /// // Snapshot only (no continuous replication)
@@ -67,7 +69,8 @@ use tokio_postgres::Client;
 ///     true,
 ///     ReplicationFilter::empty(),
 ///     false,
-///     false  // Disable continuous replication
+///     false, // Disable continuous replication
+///     true   // Allow resume
 /// ).await?;
 /// # Ok(())
 /// # }
@@ -79,6 +82,7 @@ pub async fn init(
     filter: crate::filters::ReplicationFilter,
     drop_existing: bool,
     enable_sync: bool,
+    allow_resume: bool,
 ) -> Result<()> {
     tracing::info!("Starting initial replication...");
 
@@ -92,6 +96,9 @@ pub async fn init(
     let temp_path =
         crate::utils::create_managed_temp_dir().context("Failed to create temp directory")?;
     tracing::debug!("Using temp directory: {}", temp_path.display());
+
+    let checkpoint_path = checkpoint::checkpoint_path(source_url, target_url)
+        .context("Failed to determine checkpoint location")?;
 
     // Step 1: Dump global objects
     tracing::info!("Step 1/4: Dumping global objects (roles, tablespaces)...");
@@ -114,6 +121,7 @@ pub async fn init(
         .collect();
 
     if databases.is_empty() {
+        let _ = checkpoint::remove_checkpoint(&checkpoint_path);
         if filter.is_empty() {
             tracing::warn!("⚠ No user databases found on source");
             tracing::warn!("  This is unusual - the source database appears empty");
@@ -125,6 +133,51 @@ pub async fn init(
         tracing::info!("✅ Initial replication complete (no databases to replicate)");
         return Ok(());
     }
+
+    let database_names: Vec<String> = databases.iter().map(|db| db.name.clone()).collect();
+    let filter_hash = filter.fingerprint();
+    let checkpoint_metadata = checkpoint::InitCheckpointMetadata::new(
+        source_url,
+        target_url,
+        filter_hash,
+        drop_existing,
+        enable_sync,
+    );
+
+    let mut checkpoint_state = if allow_resume {
+        match checkpoint::InitCheckpoint::load(&checkpoint_path)? {
+            Some(existing) => {
+                existing
+                    .validate(&checkpoint_metadata, &database_names)
+                    .context("Checkpoint metadata mismatch")?;
+                if existing.completed_count() > 0 {
+                    tracing::info!(
+                        "Resume checkpoint found: {}/{} databases already replicated",
+                        existing.completed_count(),
+                        existing.total_databases()
+                    );
+                } else {
+                    tracing::info!("Resume checkpoint found but no databases marked complete yet");
+                }
+                existing
+            }
+            None => checkpoint::InitCheckpoint::new(checkpoint_metadata.clone(), &database_names),
+        }
+    } else {
+        if checkpoint_path.exists() {
+            tracing::info!(
+                "--no-resume supplied: discarding previous checkpoint at {}",
+                checkpoint_path.display()
+            );
+        }
+        checkpoint::remove_checkpoint(&checkpoint_path)?;
+        checkpoint::InitCheckpoint::new(checkpoint_metadata.clone(), &database_names)
+    };
+
+    // Persist baseline state so crashes before first database can resume cleanly
+    checkpoint_state
+        .save(&checkpoint_path)
+        .context("Failed to persist checkpoint state")?;
 
     tracing::info!("Found {} database(s) to replicate", databases.len());
 
@@ -143,6 +196,13 @@ pub async fn init(
     // Step 4: Replicate each database
     tracing::info!("Step 4/4: Replicating databases...");
     for (idx, db_info) in databases.iter().enumerate() {
+        if checkpoint_state.is_completed(&db_info.name) {
+            tracing::info!(
+                "Skipping database '{}' (already completed per checkpoint)",
+                db_info.name
+            );
+            continue;
+        }
         tracing::info!(
             "Replicating database {}/{}: '{}'",
             idx + 1,
@@ -236,6 +296,11 @@ pub async fn init(
         migration::restore_data(&target_db_url, data_dir.to_str().unwrap()).await?;
 
         tracing::info!("✓ Database '{}' replicated successfully", db_info.name);
+
+        checkpoint_state.mark_completed(&db_info.name);
+        checkpoint_state
+            .save(&checkpoint_path)
+            .with_context(|| format!("Failed to update checkpoint for '{}'", db_info.name))?;
     }
 
     // Explicitly clean up temp directory
@@ -243,6 +308,10 @@ pub async fn init(
     if let Err(e) = crate::utils::remove_managed_temp_dir(&temp_path) {
         tracing::warn!("Failed to clean up temp directory: {}", e);
         // Don't fail the entire operation if cleanup fails
+    }
+
+    if let Err(err) = checkpoint::remove_checkpoint(&checkpoint_path) {
+        tracing::warn!("Failed to remove checkpoint state: {}", err);
     }
 
     tracing::info!("✅ Initial replication complete");
@@ -449,7 +518,7 @@ mod tests {
 
         // Skip confirmation for automated tests, disable sync to keep test simple
         let filter = crate::filters::ReplicationFilter::empty();
-        let result = init(&source, &target, true, filter, false, false).await;
+        let result = init(&source, &target, true, filter, false, false, true).await;
         assert!(result.is_ok());
     }
 

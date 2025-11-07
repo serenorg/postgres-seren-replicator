@@ -47,7 +47,7 @@ async fn test_init_command_integration() {
 
     // Skip confirmation for automated tests, disable sync to keep test simple
     let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
-    let result = commands::init(&source_url, &target_url, true, filter, false, false).await;
+    let result = commands::init(&source_url, &target_url, true, filter, false, false, true).await;
 
     match &result {
         Ok(_) => {
@@ -177,7 +177,8 @@ async fn test_full_replication_workflow() {
     /*
     println!("STEP 2: Initialize replication...");
     let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
-    let init_result = commands::init(&source_url, &target_url, true, filter, false).await;
+    let init_result =
+        commands::init(&source_url, &target_url, true, filter, false, true, true).await;
     match &init_result {
         Ok(_) => println!("✓ Init completed"),
         Err(e) => {
@@ -292,7 +293,7 @@ async fn test_init_with_database_filter() {
     .expect("Failed to create filter");
 
     // Skip confirmation for automated tests, disable sync to keep test simple
-    let result = commands::init(&source_url, &target_url, true, filter, false, false).await;
+    let result = commands::init(&source_url, &target_url, true, filter, false, false, true).await;
 
     match &result {
         Ok(_) => {
@@ -326,7 +327,7 @@ async fn test_init_with_table_filter() {
     .expect("Failed to create filter");
 
     // Skip confirmation for automated tests, disable sync to keep test simple
-    let result = commands::init(&source_url, &target_url, true, filter, false, false).await;
+    let result = commands::init(&source_url, &target_url, true, filter, false, false, true).await;
 
     match &result {
         Ok(_) => {

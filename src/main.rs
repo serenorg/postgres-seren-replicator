@@ -66,6 +66,9 @@ enum Commands {
         /// Disable automatic continuous replication setup after snapshot (default: false, meaning sync IS enabled)
         #[arg(long)]
         no_sync: bool,
+        /// Ignore any previous checkpoint and start a fresh run
+        #[arg(long)]
+        no_resume: bool,
     },
     /// Set up continuous logical replication from source to target
     Sync {
@@ -180,6 +183,7 @@ async fn main() -> anyhow::Result<()> {
             interactive,
             drop_existing,
             no_sync,
+            no_resume,
         } => {
             let filter = if interactive {
                 // Interactive mode - prompt user to select databases and tables
@@ -194,7 +198,16 @@ async fn main() -> anyhow::Result<()> {
                 )?
             };
             let enable_sync = !no_sync; // Invert the flag: by default sync is enabled
-            commands::init(&source, &target, yes, filter, drop_existing, enable_sync).await
+            commands::init(
+                &source,
+                &target,
+                yes,
+                filter,
+                drop_existing,
+                enable_sync,
+                !no_resume,
+            )
+            .await
         }
         Commands::Sync {
             source,
