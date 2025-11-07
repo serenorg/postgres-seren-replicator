@@ -72,6 +72,16 @@ impl ReplicationFilter {
             && self.exclude_tables.is_none()
     }
 
+    /// Gets the list of tables to exclude
+    pub fn exclude_tables(&self) -> Option<&Vec<String>> {
+        self.exclude_tables.as_ref()
+    }
+
+    /// Gets the list of tables to include
+    pub fn include_tables(&self) -> Option<&Vec<String>> {
+        self.include_tables.as_ref()
+    }
+
     /// Determines if a database should be replicated
     pub fn should_replicate_database(&self, db_name: &str) -> bool {
         // If include list exists, database must be in it
