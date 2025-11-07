@@ -1,7 +1,7 @@
 // ABOUTME: Pre-flight validation command for migration readiness
 // ABOUTME: Checks connectivity, privileges, and version compatibility
 
-use crate::{postgres, utils};
+use crate::{migration, postgres, utils};
 use anyhow::{bail, Context, Result};
 
 /// Pre-flight validation command for migration readiness
@@ -10,6 +10,8 @@ use anyhow::{bail, Context, Result};
 /// - Checks for required PostgreSQL client tools (pg_dump, pg_dumpall, psql)
 /// - Validates connection string format
 /// - Tests connectivity to both source and target databases
+/// - Discovers and filters databases based on criteria
+/// - Shows which databases will be replicated
 /// - Verifies source user has REPLICATION privilege
 /// - Verifies target user has CREATEDB privilege
 /// - Confirms PostgreSQL major versions match
@@ -17,8 +19,9 @@ use anyhow::{bail, Context, Result};
 ///
 /// # Arguments
 ///
-/// * `source_url` - PostgreSQL connection string for source (Neon) database
+/// * `source_url` - PostgreSQL connection string for source database
 /// * `target_url` - PostgreSQL connection string for target (Seren) database
+/// * `filter` - Replication filter for database and table selection
 ///
 /// # Returns
 ///
@@ -30,6 +33,7 @@ use anyhow::{bail, Context, Result};
 /// - Required PostgreSQL tools are not installed
 /// - Connection strings are invalid
 /// - Cannot connect to source or target database
+/// - No databases match filter criteria
 /// - Source user lacks REPLICATION privilege
 /// - Target user lacks CREATEDB privilege
 /// - PostgreSQL major versions don't match
@@ -41,10 +45,24 @@ use anyhow::{bail, Context, Result};
 /// # use postgres_seren_replicator::commands::validate;
 /// # use postgres_seren_replicator::filters::ReplicationFilter;
 /// # async fn example() -> Result<()> {
+/// // Validate all databases
 /// validate(
-///     "postgresql://user:pass@neon.tech/sourcedb",
-///     "postgresql://user:pass@seren.example.com/targetdb",
+///     "postgresql://user:pass@source.example.com/postgres",
+///     "postgresql://user:pass@target.example.com/postgres",
 ///     ReplicationFilter::empty()
+/// ).await?;
+///
+/// // Validate only specific databases
+/// let filter = ReplicationFilter::new(
+///     Some(vec!["mydb".to_string(), "analytics".to_string()]),
+///     None,
+///     None,
+///     None,
+/// )?;
+/// validate(
+///     "postgresql://user:pass@source.example.com/postgres",
+///     "postgresql://user:pass@target.example.com/postgres",
+///     filter
 /// ).await?;
 /// # Ok(())
 /// # }
@@ -52,7 +70,7 @@ use anyhow::{bail, Context, Result};
 pub async fn validate(
     source_url: &str,
     target_url: &str,
-    _filter: crate::filters::ReplicationFilter,
+    filter: crate::filters::ReplicationFilter,
 ) -> Result<()> {
     tracing::info!("Starting validation...");
 
@@ -74,14 +92,58 @@ pub async fn validate(
         .context("Failed to connect to source database")?;
     tracing::info!("✓ Connected to source");
 
-    // Step 2: Connect to target
+    // Step 2: Discover and filter databases
+    tracing::info!("Discovering databases on source...");
+    let all_databases = migration::list_databases(&source_client)
+        .await
+        .context("Failed to list databases on source")?;
+
+    // Apply filtering rules
+    let databases: Vec<_> = all_databases
+        .into_iter()
+        .filter(|db| filter.should_replicate_database(&db.name))
+        .collect();
+
+    if databases.is_empty() {
+        if filter.is_empty() {
+            bail!(
+                "No user databases found on source. Only template databases exist.\n\
+                 Cannot proceed with migration - source appears empty."
+            );
+        } else {
+            bail!(
+                "No databases matched the filter criteria.\n\
+                 Check your --include-databases or --exclude-databases settings.\n\
+                 Available databases: {}",
+                migration::list_databases(&source_client)
+                    .await?
+                    .iter()
+                    .map(|db| &db.name)
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+        }
+    }
+
+    tracing::info!("✓ Found {} database(s) to replicate:", databases.len());
+    for db in &databases {
+        tracing::info!("  - {}", db.name);
+    }
+
+    // Show table filtering info if applicable
+    if filter.include_tables().is_some() || filter.exclude_tables().is_some() {
+        tracing::info!("  Table filtering is active - only filtered tables will be replicated");
+    }
+
+    // Step 3: Connect to target
     tracing::info!("Connecting to target database...");
     let target_client = postgres::connect(target_url)
         .await
         .context("Failed to connect to target database")?;
     tracing::info!("✓ Connected to target");
 
-    // Step 3: Check source privileges
+    // Step 4: Check source privileges
     tracing::info!("Checking source privileges...");
     let source_privs = postgres::check_source_privileges(&source_client).await?;
     if !source_privs.has_replication && !source_privs.is_superuser {
@@ -89,7 +151,7 @@ pub async fn validate(
     }
     tracing::info!("✓ Source has replication privileges");
 
-    // Step 4: Check target privileges
+    // Step 5: Check target privileges
     tracing::info!("Checking target privileges...");
     let target_privs = postgres::check_target_privileges(&target_client).await?;
     if !target_privs.has_create_db && !target_privs.is_superuser {
@@ -102,7 +164,7 @@ pub async fn validate(
     }
     tracing::info!("✓ Target has sufficient privileges");
 
-    // Step 5: Check PostgreSQL versions
+    // Step 6: Check PostgreSQL versions
     tracing::info!("Checking PostgreSQL versions...");
     let source_version = get_pg_version(&source_client).await?;
     let target_version = get_pg_version(&target_client).await?;
@@ -120,12 +182,21 @@ pub async fn validate(
         source_version.minor
     );
 
-    // Step 6: Check extension compatibility
+    // Step 7: Check extension compatibility
     tracing::info!("Checking extension compatibility...");
     check_extension_compatibility(&source_client, &target_client).await?;
     tracing::info!("✓ Extension compatibility confirmed");
 
+    tracing::info!("");
     tracing::info!("✅ Validation complete - ready for migration");
+    tracing::info!("");
+    tracing::info!(
+        "The following {} database(s) will be replicated:",
+        databases.len()
+    );
+    for db in &databases {
+        tracing::info!("  ✓ {}", db.name);
+    }
     Ok(())
 }
 
@@ -274,5 +345,53 @@ mod tests {
         let filter = crate::filters::ReplicationFilter::empty();
         let result = validate("invalid-url", "postgresql://localhost/db", filter).await;
         assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_validate_with_database_filter() {
+        let source = std::env::var("TEST_SOURCE_URL").unwrap();
+        let target = std::env::var("TEST_TARGET_URL").unwrap();
+
+        // Create filter that includes only postgres database
+        let filter = crate::filters::ReplicationFilter::new(
+            Some(vec!["postgres".to_string()]),
+            None,
+            None,
+            None,
+        )
+        .expect("Failed to create filter");
+
+        let result = validate(&source, &target, filter).await;
+        assert!(result.is_ok(), "Validate with database filter failed");
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn test_validate_with_no_matching_databases_fails() {
+        let source = std::env::var("TEST_SOURCE_URL").unwrap();
+        let target = std::env::var("TEST_TARGET_URL").unwrap();
+
+        // Create filter that matches no databases
+        let filter = crate::filters::ReplicationFilter::new(
+            Some(vec!["nonexistent_database".to_string()]),
+            None,
+            None,
+            None,
+        )
+        .expect("Failed to create filter");
+
+        let result = validate(&source, &target, filter).await;
+        assert!(
+            result.is_err(),
+            "Validate should fail when no databases match filter"
+        );
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("No databases matched"),
+            "Error message should indicate no databases matched"
+        );
     }
 }
