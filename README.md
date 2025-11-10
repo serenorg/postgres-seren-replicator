@@ -387,16 +387,27 @@ Filtering works with all commands that support it:
 
 Interactive mode provides a user-friendly terminal UI for selecting databases and tables to replicate. This is ideal for exploratory migrations or when you're not sure exactly what you want to replicate.
 
-### Using Interactive Mode
+**Interactive mode is the default** for `init`, `validate`, and `sync` commands. Simply run the command without any filter flags:
 
-Add the `--interactive` flag to `init`, `validate`, or `sync` commands:
+```bash
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/postgres" \
+  --target "postgresql://user:pass@seren-host:5432/postgres"
+```
+
+### Disabling Interactive Mode
+
+To use CLI filter flags instead of interactive mode, add the `--no-interactive` flag:
 
 ```bash
 ./postgres-seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@seren-host:5432/postgres" \
-  --interactive
+  --no-interactive \
+  --include-databases "myapp,analytics"
 ```
+
+**Note**: The `--yes` flag (for `init` command) automatically disables interactive mode since it's meant for automation.
 
 ### Interactive Workflow
 

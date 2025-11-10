@@ -48,9 +48,9 @@ enum Commands {
         /// Exclude these tables (format: database.table, comma-separated)
         #[arg(long, value_delimiter = ',')]
         exclude_tables: Option<Vec<String>>,
-        /// Interactive mode for selecting databases/tables
+        /// Disable interactive mode (use CLI filter flags instead)
         #[arg(long)]
-        interactive: bool,
+        no_interactive: bool,
     },
     /// Initialize replication with snapshot copy of schema and data
     Init {
@@ -73,9 +73,9 @@ enum Commands {
         /// Exclude these tables (format: database.table, comma-separated)
         #[arg(long, value_delimiter = ',')]
         exclude_tables: Option<Vec<String>>,
-        /// Interactive mode for selecting databases/tables
+        /// Disable interactive mode (use CLI filter flags instead)
         #[arg(long)]
-        interactive: bool,
+        no_interactive: bool,
         #[command(flatten)]
         table_rules: TableRuleArgs,
         /// Drop existing databases on target before copying
@@ -106,9 +106,9 @@ enum Commands {
         /// Exclude these tables (format: database.table, comma-separated)
         #[arg(long, value_delimiter = ',')]
         exclude_tables: Option<Vec<String>>,
-        /// Interactive mode for selecting databases/tables
+        /// Disable interactive mode (use CLI filter flags instead)
         #[arg(long)]
-        interactive: bool,
+        no_interactive: bool,
         #[command(flatten)]
         table_rules: TableRuleArgs,
         /// Force recreate subscriptions even if they already exist
@@ -176,10 +176,10 @@ async fn main() -> anyhow::Result<()> {
             exclude_databases,
             include_tables,
             exclude_tables,
-            interactive,
+            no_interactive,
         } => {
-            let filter = if interactive {
-                // Interactive mode - prompt user to select databases and tables
+            let filter = if !no_interactive {
+                // Interactive mode (default) - prompt user to select databases and tables
                 postgres_seren_replicator::interactive::select_databases_and_tables(&source).await?
             } else {
                 // CLI mode - use provided filter arguments
@@ -200,14 +200,16 @@ async fn main() -> anyhow::Result<()> {
             exclude_databases,
             include_tables,
             exclude_tables,
-            interactive,
+            no_interactive,
             table_rules,
             drop_existing,
             no_sync,
             no_resume,
         } => {
-            let filter = if interactive {
-                // Interactive mode - prompt user to select databases and tables
+            // Interactive mode is default unless --no-interactive or --yes is specified
+            // (--yes implies automation, so it disables interactive mode)
+            let filter = if !no_interactive && !yes {
+                // Interactive mode (default) - prompt user to select databases and tables
                 postgres_seren_replicator::interactive::select_databases_and_tables(&source).await?
             } else {
                 // CLI mode - use provided filter arguments
@@ -239,12 +241,12 @@ async fn main() -> anyhow::Result<()> {
             exclude_databases,
             include_tables,
             exclude_tables,
-            interactive,
+            no_interactive,
             table_rules,
             force,
         } => {
-            let filter = if interactive {
-                // Interactive mode - prompt user to select databases and tables
+            let filter = if !no_interactive {
+                // Interactive mode (default) - prompt user to select databases and tables
                 postgres_seren_replicator::interactive::select_databases_and_tables(&source).await?
             } else {
                 // CLI mode - use provided filter arguments
