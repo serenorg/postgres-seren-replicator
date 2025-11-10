@@ -398,4 +398,29 @@ mod tests {
 
         assert_ne!(filter_a.fingerprint(), filter_b.fingerprint());
     }
+
+    #[test]
+    fn test_fingerprint_includes_table_rules_schema() {
+        use crate::table_rules::TableRules;
+
+        // Create two filters with different table rule schemas
+        let mut table_rules_a = TableRules::default();
+        table_rules_a
+            .apply_schema_only_cli(&["public.orders".to_string()])
+            .unwrap();
+
+        let mut table_rules_b = TableRules::default();
+        table_rules_b
+            .apply_schema_only_cli(&["analytics.orders".to_string()])
+            .unwrap();
+
+        let filter_a = ReplicationFilter::empty().with_table_rules(table_rules_a);
+        let filter_b = ReplicationFilter::empty().with_table_rules(table_rules_b);
+
+        assert_ne!(
+            filter_a.fingerprint(),
+            filter_b.fingerprint(),
+            "Filters with different table rule schemas should produce different fingerprints"
+        );
+    }
 }

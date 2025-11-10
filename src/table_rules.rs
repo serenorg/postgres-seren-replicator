@@ -208,11 +208,7 @@ impl TableRules {
         Ok(())
     }
 
-    pub fn add_table_filter(
-        &mut self,
-        qualified: QualifiedTable,
-        predicate: String,
-    ) -> Result<()> {
+    pub fn add_table_filter(&mut self, qualified: QualifiedTable, predicate: String) -> Result<()> {
         if predicate.trim().is_empty() {
             bail!(
                 "Table filter predicate cannot be empty for '{}'",
@@ -295,7 +291,11 @@ impl TableRules {
                 );
             }
             let qualified = QualifiedTable::parse(table_part)?;
-            self.add_time_filter(qualified, column.trim().to_string(), window.trim().to_string())?;
+            self.add_time_filter(
+                qualified,
+                column.trim().to_string(),
+                window.trim().to_string(),
+            )?;
         }
         Ok(())
     }
@@ -308,7 +308,12 @@ impl TableRules {
         lookup_scoped(&self.table_filters, database, schema, table)
     }
 
-    pub fn time_filter(&self, database: &str, schema: &str, table: &str) -> Option<&TimeFilterRule> {
+    pub fn time_filter(
+        &self,
+        database: &str,
+        schema: &str,
+        table: &str,
+    ) -> Option<&TimeFilterRule> {
         lookup_scoped(&self.time_filters, database, schema, table)
     }
 
@@ -333,7 +338,12 @@ impl TableRules {
         combined.into_iter().collect()
     }
 
-    pub fn rule_for_table(&self, database: &str, schema: &str, table: &str) -> Option<TableRuleKind> {
+    pub fn rule_for_table(
+        &self,
+        database: &str,
+        schema: &str,
+        table: &str,
+    ) -> Option<TableRuleKind> {
         if has_schema_only_rule(&self.schema_only, database, schema, table) {
             return Some(TableRuleKind::SchemaOnly);
         }
@@ -419,7 +429,12 @@ fn scoped_map_values<V: Clone>(map: &ScopedTableMap<V>, database: &str) -> BTree
     values
 }
 
-fn has_schema_only_rule(schema_only: &ScopedTableSet, database: &str, schema: &str, table: &str) -> bool {
+fn has_schema_only_rule(
+    schema_only: &ScopedTableSet,
+    database: &str,
+    schema: &str,
+    table: &str,
+) -> bool {
     let key = SchemaTableKey::from_parts(Some(schema), table);
     schema_only
         .get(&ScopeKey::Global)
@@ -701,7 +716,9 @@ mod tests {
         let mut rules = TableRules::default();
         // "analytics.logs" is parsed as schema=analytics, table=logs
         rules
-            .apply_table_filter_cli(&["analytics.logs:created_at > NOW() - INTERVAL '1 day'".into()])
+            .apply_table_filter_cli(
+                &["analytics.logs:created_at > NOW() - INTERVAL '1 day'".into()],
+            )
             .unwrap();
         assert!(rules
             .table_filter("anydb", "analytics", "logs")
@@ -754,5 +771,88 @@ mod tests {
         let predicates = rules.predicate_tables("db1");
         assert_eq!(predicates.len(), 1);
         assert!(predicates[0].1.contains("INTERVAL '6 month'"));
+    }
+
+    #[test]
+    fn test_fingerprint_changes_with_schema() {
+        // Different schemas should produce different fingerprints
+        let mut rules_a = TableRules::default();
+        rules_a
+            .apply_schema_only_cli(&["public.orders".to_string()])
+            .unwrap();
+
+        let mut rules_b = TableRules::default();
+        rules_b
+            .apply_schema_only_cli(&["analytics.orders".to_string()])
+            .unwrap();
+
+        assert_ne!(
+            rules_a.fingerprint(),
+            rules_b.fingerprint(),
+            "Different schemas should produce different fingerprints"
+        );
+    }
+
+    #[test]
+    fn test_fingerprint_stable_with_order() {
+        // Same tables, different order -> same fingerprint (BTreeSet sorts)
+        let mut rules_a = TableRules::default();
+        rules_a
+            .apply_schema_only_cli(&["public.users".to_string(), "public.orders".to_string()])
+            .unwrap();
+
+        let mut rules_b = TableRules::default();
+        rules_b
+            .apply_schema_only_cli(&[
+                "public.orders".to_string(), // Different order
+                "public.users".to_string(),
+            ])
+            .unwrap();
+
+        assert_eq!(
+            rules_a.fingerprint(),
+            rules_b.fingerprint(),
+            "Same tables in different order should produce same fingerprint"
+        );
+    }
+
+    #[test]
+    fn test_fingerprint_includes_table_filter_schema() {
+        // Table filters with different schemas should produce different fingerprints
+        let mut rules_a = TableRules::default();
+        rules_a
+            .apply_table_filter_cli(&["public.logs:created_at > NOW()".to_string()])
+            .unwrap();
+
+        let mut rules_b = TableRules::default();
+        rules_b
+            .apply_table_filter_cli(&["analytics.logs:created_at > NOW()".to_string()])
+            .unwrap();
+
+        assert_ne!(
+            rules_a.fingerprint(),
+            rules_b.fingerprint(),
+            "Table filters with different schemas should produce different fingerprints"
+        );
+    }
+
+    #[test]
+    fn test_fingerprint_includes_time_filter_schema() {
+        // Time filters with different schemas should produce different fingerprints
+        let mut rules_a = TableRules::default();
+        rules_a
+            .apply_time_filter_cli(&["public.metrics:timestamp:1 year".to_string()])
+            .unwrap();
+
+        let mut rules_b = TableRules::default();
+        rules_b
+            .apply_time_filter_cli(&["reporting.metrics:timestamp:1 year".to_string()])
+            .unwrap();
+
+        assert_ne!(
+            rules_a.fingerprint(),
+            rules_b.fingerprint(),
+            "Time filters with different schemas should produce different fingerprints"
+        );
     }
 }
