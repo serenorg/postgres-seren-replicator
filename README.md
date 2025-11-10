@@ -559,6 +559,46 @@ The tool implements secure credential handling to prevent command injection vuln
 
 **Connection String Format**: While you provide connection URLs to the tool (e.g., `postgresql://user:pass@host:5432/db`), these URLs are parsed internally and credentials are extracted securely. They are never passed as-is to external PostgreSQL commands.
 
+### Subscription Connection Strings
+
+**Important Security Consideration**: PostgreSQL logical replication subscriptions store connection strings in the `pg_subscription` system catalog table. This is a PostgreSQL design limitation - subscription connection strings (including passwords if provided) are visible to users who can query system catalogs.
+
+**Security Implications**:
+
+- Connection strings with passwords are stored in `pg_subscription.subconninfo`
+- Users with `pg_read_all_settings` role or `SELECT` on `pg_subscription` can view these passwords
+- This information persists until the subscription is dropped
+
+**Recommended Mitigation** - Configure `.pgpass` on Target Server:
+
+To avoid storing passwords in the subscription catalog, configure a `.pgpass` file on your target PostgreSQL server:
+
+1. **Create `.pgpass` file** in the PostgreSQL server user's home directory (typically `/var/lib/postgresql/.pgpass`):
+
+   ```text
+   source-host:5432:dbname:username:password
+   ```
+
+2. **Set secure permissions**:
+
+   ```bash
+   chmod 0600 /var/lib/postgresql/.pgpass
+   chown postgres:postgres /var/lib/postgresql/.pgpass
+   ```
+
+3. **Use password-less connection string** when running `sync`:
+
+   ```bash
+   # Omit password from source URL
+   postgres-seren-replicator sync \
+     --source "postgresql://user@source-host:5432/db" \
+     --target "postgresql://user:pass@target-host:5432/db"
+   ```
+
+With this configuration, subscriptions will authenticate using the `.pgpass` file on the target server, and no password will be stored in `pg_subscription`.
+
+**Note**: The tool displays a warning when creating subscriptions to remind you of this security consideration.
+
 ## Testing
 
 ### Unit Tests

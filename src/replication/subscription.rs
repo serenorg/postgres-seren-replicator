@@ -30,6 +30,26 @@ pub async fn create_subscription(
 
     tracing::info!("Creating subscription '{}'...", subscription_name);
 
+    // SECURITY NOTE: PostgreSQL subscriptions store connection strings (including passwords)
+    // in the pg_subscription system catalog, visible to users with access to that table.
+    //
+    // To avoid storing passwords in the catalog:
+    // 1. Configure .pgpass file on the TARGET PostgreSQL server
+    // 2. Use password-less connection string (omit password from URL)
+    // 3. The subscription will read credentials from .pgpass
+    //
+    // See: https://www.postgresql.org/docs/current/libpq-pgpass.html
+    //
+    // For now, we use the provided connection string as-is for compatibility.
+    // Users concerned about password exposure should configure .pgpass on the target server.
+
+    tracing::warn!(
+        "⚠ Security Note: Subscription connection strings are stored in pg_subscription catalog"
+    );
+    tracing::warn!(
+        "  To avoid storing passwords, configure .pgpass on the target PostgreSQL server"
+    );
+
     let query = format!(
         "CREATE SUBSCRIPTION \"{}\" CONNECTION '{}' PUBLICATION \"{}\"",
         subscription_name, source_connection_string, publication_name

@@ -497,6 +497,46 @@ pub fn parse_postgres_url(url: &str) -> Result<PostgresUrlParts> {
     })
 }
 
+/// Strip password from PostgreSQL connection URL
+/// Returns a new URL with password removed, preserving all other components
+/// This is useful for storing connection strings in places where passwords should not be visible
+pub fn strip_password_from_url(url: &str) -> Result<String> {
+    let parts = parse_postgres_url(url)?;
+
+    // Reconstruct URL without password
+    let scheme = if url.starts_with("postgresql://") {
+        "postgresql://"
+    } else if url.starts_with("postgres://") {
+        "postgres://"
+    } else {
+        bail!("Invalid PostgreSQL URL scheme");
+    };
+
+    let mut result = String::from(scheme);
+
+    // Add user if present (without password)
+    if let Some(user) = &parts.user {
+        result.push_str(user);
+        result.push('@');
+    }
+
+    // Add host and port
+    result.push_str(&parts.host);
+    result.push(':');
+    result.push_str(&parts.port.to_string());
+
+    // Add database
+    result.push('/');
+    result.push_str(&parts.database);
+
+    // Preserve query parameters if present
+    if let Some(query_start) = url.find('?') {
+        result.push_str(&url[query_start..]);
+    }
+
+    Ok(result)
+}
+
 /// Parsed components of a PostgreSQL connection URL
 #[derive(Debug, PartialEq)]
 pub struct PostgresUrlParts {
@@ -1126,6 +1166,34 @@ mod tests {
         let content = std::fs::read_to_string(pgpass.path()).unwrap();
         // Should use wildcard for user
         assert_eq!(content, "localhost:5432:testdb:*:testpass\n");
+    }
+
+    #[test]
+    fn test_strip_password_from_url() {
+        // With password
+        let url = "postgresql://user:p@ssw0rd@host:5432/db";
+        let stripped = strip_password_from_url(url).unwrap();
+        assert_eq!(stripped, "postgresql://user@host:5432/db");
+
+        // With special characters in password
+        let url = "postgresql://user:p@ss!w0rd@host:5432/db";
+        let stripped = strip_password_from_url(url).unwrap();
+        assert_eq!(stripped, "postgresql://user@host:5432/db");
+
+        // Without password
+        let url = "postgresql://user@host:5432/db";
+        let stripped = strip_password_from_url(url).unwrap();
+        assert_eq!(stripped, "postgresql://user@host:5432/db");
+
+        // With query parameters
+        let url = "postgresql://user:pass@host:5432/db?sslmode=require";
+        let stripped = strip_password_from_url(url).unwrap();
+        assert_eq!(stripped, "postgresql://user@host:5432/db?sslmode=require");
+
+        // No user
+        let url = "postgresql://host:5432/db";
+        let stripped = strip_password_from_url(url).unwrap();
+        assert_eq!(stripped, "postgresql://host:5432/db");
     }
 
     #[test]
