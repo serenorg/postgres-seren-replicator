@@ -89,21 +89,34 @@ jobs:
 
           # Generate release notes
           cat > release-notes.md << 'EOF'
-          ## 🐛 Bug Fix Release: v2.0.1
+          ## ✨ Feature Release: v2.1.0
 
-          This patch release fixes connection URL query parameter handling.
+          This minor release enhances the interactive mode with advanced table-level filtering capabilities.
 
-          ### 🔧 Bug Fixes
+          ### 🎯 New Features
 
-          **Fixed: Query Parameter Support (Issue #109)**
-          - Fixed pg_dumpall failing with connection URLs containing query parameters (e.g., `sslmode=require`, `channel_binding=require`)
-          - Query parameters are now properly parsed and passed to PostgreSQL tools as environment variables
-          - Enables support for PostgreSQL providers requiring SSL/TLS (Neon, AWS RDS, etc.)
-          - Fixed pg_dumpall to use `--database` instead of `--dbname` flag
+          **Enhanced Interactive Mode (Issue #111)**
+          - Added schema-only table selection - replicate DDL only, skip data
+          - Added time-based filter configuration - replicate recent data (e.g., last 2 months)
+          - Interactive prompts for timestamp column and time window selection
+          - Enhanced summary display showing all configuration options with visual indicators (📋 schema-only, 🕒 time filters)
+
+          ### 🔧 Improvements
+
+          - Users can now configure advanced filtering without CLI flags or TOML config files
+          - Guided interactive workflow for column name and time period selection
+          - Default values provided (created_at, 2 months) for faster configuration
+          - Complete configuration summary before confirmation
 
           ### Impact
 
-          This fix resolves connection failures when using PostgreSQL connection URLs with SSL/TLS settings or other query parameters. Users connecting to Neon, AWS RDS with SSL, or any PostgreSQL instance requiring connection parameters can now use the tool without issues.
+          This release makes advanced replication features accessible through the interactive UI. Users no longer need to learn CLI syntax or TOML format to configure schema-only replication or time-based filters.
+
+          ### Example Use Cases
+
+          - **Schema-only replication**: Replicate table structures for large tables without copying data
+          - **Recent data only**: Replicate last N days/months of data for analytics or staging environments
+          - **Compliance**: Exclude old data while maintaining recent records
 
           ### Installation
 
@@ -122,13 +135,13 @@ jobs:
 
           ### Upgrade Recommendation
 
-          Users connecting to PostgreSQL instances with SSL/TLS requirements should upgrade to this version.
+          All users benefit from this release - the enhanced interactive mode improves usability for selective replication scenarios.
 
-          ### Fixed Issues
+          ### Resolved Issues
 
-          - #109: pg_dumpall fails with connection URLs containing query parameters
+          - #111: Interactive mode doesn't support schema-only and time filter rules
 
-          **Full Changelog**: https://github.com/serenorg/postgres-seren-replicator/compare/v2.0.0...${VERSION}
+          **Full Changelog**: https://github.com/serenorg/postgres-seren-replicator/compare/v2.0.1...${VERSION}
           EOF
 
           # Create release with all binaries
