@@ -7,7 +7,7 @@ use crate::{
     table_rules::{QualifiedTable, TableRules},
 };
 use anyhow::{Context, Result};
-use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
 
 /// Interactive database and table selection with advanced filtering
 ///
@@ -280,14 +280,72 @@ pub async fn select_databases_and_tables(
                             .context("Failed to get time filter confirmation")?;
 
                         if apply_filter {
-                            // Prompt for column name
-                            let column: String = Input::with_theme(&ColorfulTheme::default())
-                                .with_prompt(
-                                    "  Column containing timestamps (e.g., created_at, updated_at)",
-                                )
-                                .default("created_at".to_string())
-                                .interact_text()
-                                .context("Failed to get column name")?;
+                            // Query table columns to show actual timestamp columns
+                            let db_client =
+                                postgres::connect(&db_url).await.with_context(|| {
+                                    format!(
+                                        "Failed to connect to database '{}' for column query",
+                                        db_name
+                                    )
+                                })?;
+
+                            let columns = migration::get_table_columns(
+                                &db_client,
+                                &table_info.schema,
+                                &table_info.name,
+                            )
+                            .await?;
+
+                            // Filter for timestamp columns and build display strings
+                            let timestamp_columns: Vec<(String, String)> = columns
+                                .iter()
+                                .filter(|col| col.is_timestamp)
+                                .map(|col| {
+                                    let display = format!("{} ({})", col.name, col.data_type);
+                                    (col.name.clone(), display)
+                                })
+                                .collect();
+
+                            // Prompt for column selection
+                            let column = if timestamp_columns.is_empty() {
+                                // No timestamp columns found - fall back to manual entry
+                                tracing::warn!(
+                                    "  ⚠ No timestamp columns found in table '{}'. Please enter column name manually.",
+                                    display_name
+                                );
+                                Input::with_theme(&ColorfulTheme::default())
+                                    .with_prompt("  Column name")
+                                    .default("created_at".to_string())
+                                    .interact_text()
+                                    .context("Failed to get column name")?
+                            } else {
+                                // Show timestamp columns in a selection list
+                                let display_options: Vec<String> = timestamp_columns
+                                    .iter()
+                                    .map(|(_, display)| display.clone())
+                                    .chain(std::iter::once(
+                                        "[Enter custom column name]".to_string(),
+                                    ))
+                                    .collect();
+
+                                let selection = Select::with_theme(&ColorfulTheme::default())
+                                    .with_prompt("  Select timestamp column for filtering")
+                                    .items(&display_options)
+                                    .default(0)
+                                    .interact()
+                                    .context("Failed to select timestamp column")?;
+
+                                if selection < timestamp_columns.len() {
+                                    // User selected a timestamp column
+                                    timestamp_columns[selection].0.clone()
+                                } else {
+                                    // User chose "custom" option
+                                    Input::with_theme(&ColorfulTheme::default())
+                                        .with_prompt("  Column name")
+                                        .interact_text()
+                                        .context("Failed to get custom column name")?
+                                }
+                            };
 
                             // Prompt for time window
                             let window: String = Input::with_theme(&ColorfulTheme::default())

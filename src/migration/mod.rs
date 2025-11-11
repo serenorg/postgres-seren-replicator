@@ -13,4 +13,6 @@ pub use dump::{dump_data, dump_globals, dump_schema};
 pub use estimation::{estimate_database_sizes, format_bytes, format_duration, DatabaseSizeInfo};
 pub use filtered::copy_filtered_tables;
 pub use restore::{restore_data, restore_globals, restore_schema};
-pub use schema::{list_databases, list_tables, DatabaseInfo, TableInfo};
+pub use schema::{
+    get_table_columns, list_databases, list_tables, ColumnInfo, DatabaseInfo, TableInfo,
+};

@@ -17,6 +17,13 @@ pub struct TableInfo {
     pub row_count_estimate: i64,
 }
 
+#[derive(Debug, Clone)]
+pub struct ColumnInfo {
+    pub name: String,
+    pub data_type: String,
+    pub is_timestamp: bool,
+}
+
 /// List all non-system databases in the cluster
 pub async fn list_databases(client: &Client) -> Result<Vec<DatabaseInfo>> {
     let rows = client
@@ -71,6 +78,50 @@ pub async fn list_tables(client: &Client) -> Result<Vec<TableInfo>> {
         .collect();
 
     Ok(tables)
+}
+
+/// Get columns for a specific table with their types
+///
+/// Returns all columns with a flag indicating if they are timestamp-like types.
+/// Timestamp types include: timestamp, timestamptz, date
+pub async fn get_table_columns(
+    client: &Client,
+    schema: &str,
+    table: &str,
+) -> Result<Vec<ColumnInfo>> {
+    let rows = client
+        .query(
+            "SELECT
+                a.attname as column_name,
+                t.typname as data_type,
+                CASE WHEN t.typname IN ('timestamp', 'timestamptz', 'date')
+                     THEN true
+                     ELSE false
+                END as is_timestamp
+             FROM pg_catalog.pg_attribute a
+             JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+             JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+             JOIN pg_catalog.pg_type t ON a.atttypid = t.oid
+             WHERE n.nspname = $1
+               AND c.relname = $2
+               AND a.attnum > 0
+               AND NOT a.attisdropped
+             ORDER BY a.attnum",
+            &[&schema, &table],
+        )
+        .await
+        .with_context(|| format!("Failed to get columns for table '{}'.'{}'", schema, table))?;
+
+    let columns = rows
+        .iter()
+        .map(|row| ColumnInfo {
+            name: row.get(0),
+            data_type: row.get(1),
+            is_timestamp: row.get(2),
+        })
+        .collect();
+
+    Ok(columns)
 }
 
 #[cfg(test)]
