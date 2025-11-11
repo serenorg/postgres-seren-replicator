@@ -2,7 +2,6 @@
 // ABOUTME: Applies table-level predicates and time filters during init snapshots
 
 use crate::postgres;
-use crate::utils::quote_ident;
 use anyhow::{bail, Context, Result};
 use futures::{pin_mut, SinkExt, StreamExt};
 use std::collections::BTreeSet;
@@ -133,7 +132,8 @@ pub async fn copy_filtered_tables(
             predicate
         );
 
-        let quoted_table = quote_ident(table);
+        // Table is already schema-qualified and quoted (e.g., "public"."table")
+        let quoted_table = table;
 
         // Use TRUNCATE CASCADE to handle FK dependencies
         let truncate_sql = format!("TRUNCATE TABLE {} CASCADE", quoted_table);
