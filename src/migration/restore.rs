@@ -23,6 +23,8 @@ pub async fn restore_globals(target_url: &str, input_path: &str) -> Result<()> {
         .arg(&parts.database)
         .arg(format!("--file={}", input_path))
         .arg("--quiet")
+        .arg("-v")
+        .arg("ON_ERROR_STOP=1") // Stop on first error for better visibility
         .env("PGPASSFILE", pgpass.path())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());
@@ -73,6 +75,8 @@ pub async fn restore_schema(target_url: &str, input_path: &str) -> Result<()> {
         .arg(&parts.database)
         .arg(format!("--file={}", input_path))
         .arg("--quiet")
+        .arg("-v")
+        .arg("ON_ERROR_STOP=1") // Stop on first error for better visibility
         .env("PGPASSFILE", pgpass.path())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit());

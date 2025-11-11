@@ -19,6 +19,7 @@ pub async fn dump_globals(source_url: &str, output_path: &str) -> Result<()> {
     let mut cmd = Command::new("pg_dumpall");
     cmd.arg("--globals-only")
         .arg("--no-role-passwords") // Don't dump passwords
+        .arg("--verbose") // Show progress
         .arg("--host")
         .arg(&parts.host)
         .arg("--port")
@@ -86,7 +87,8 @@ pub async fn dump_schema(
     let mut cmd = Command::new("pg_dump");
     cmd.arg("--schema-only")
         .arg("--no-owner") // Don't include ownership commands
-        .arg("--no-privileges"); // We'll handle privileges separately
+        .arg("--no-privileges") // We'll handle privileges separately
+        .arg("--verbose"); // Show progress
 
     // Add table filtering if specified
     if let Some(exclude_tables) = get_excluded_tables_for_db(filter, database) {
@@ -191,7 +193,8 @@ pub async fn dump_data(
         .arg("--format=directory") // Directory format enables parallel operations
         .arg("--blobs") // Include large objects (blobs)
         .arg("--compress=9") // Maximum compression for smaller dump size
-        .arg(format!("--jobs={}", num_cpus)); // Parallel dump jobs
+        .arg(format!("--jobs={}", num_cpus)) // Parallel dump jobs
+        .arg("--verbose"); // Show progress
 
     // Add table filtering if specified
     if let Some(exclude_tables) = get_excluded_tables_for_db(filter, database) {
