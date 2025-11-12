@@ -135,7 +135,7 @@ pub async fn restore_schema(target_url: &str, input_path: &str) -> Result<()> {
          - Schema objects already exist (try dropping them first)\n\
          - Version incompatibility between source and target\n\
          - Syntax errors in dump file\n\
-         - Connection timeout or network issues"
+         - Connection timeout or network issues",
     )?;
 
     tracing::info!("✓ Schema restored successfully");
@@ -223,7 +223,7 @@ pub async fn restore_data(target_url: &str, input_path: &str) -> Result<()> {
          - Disk space issues on target\n\
          - Data type mismatches\n\
          - Input directory is not a valid pg_dump directory format\n\
-         - Connection timeout or network issues"
+         - Connection timeout or network issues",
     )?;
 
     tracing::info!(

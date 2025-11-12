@@ -266,7 +266,10 @@ pub async fn init(
                     if let Some(db_error) = err.as_db_error() {
                         if db_error.code() == &tokio_postgres::error::SqlState::DUPLICATE_DATABASE {
                             // Database already exists - handle based on user preferences
-                            tracing::info!("  Database '{}' already exists on target", db_info.name);
+                            tracing::info!(
+                                "  Database '{}' already exists on target",
+                                db_info.name
+                            );
 
                             // Check if empty
                             if database_is_empty(target_url, &db_info.name).await? {
@@ -295,7 +298,8 @@ pub async fn init(
                                     drop_database_if_exists(&target_client, &db_info.name).await?;
 
                                     // Recreate the database
-                                    let create_query = format!("CREATE DATABASE \"{}\"", db_info.name);
+                                    let create_query =
+                                        format!("CREATE DATABASE \"{}\"", db_info.name);
                                     target_client
                                         .execute(&create_query, &[])
                                         .await
@@ -318,8 +322,9 @@ pub async fn init(
                         }
                     } else {
                         // Not a database error - propagate it
-                        return Err(err)
-                            .with_context(|| format!("Failed to create database '{}'", db_info.name));
+                        return Err(err).with_context(|| {
+                            format!("Failed to create database '{}'", db_info.name)
+                        });
                     }
                 }
             }

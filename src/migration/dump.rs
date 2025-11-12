@@ -68,7 +68,7 @@ pub async fn dump_globals(source_url: &str, output_path: &str) -> Result<()> {
          - User lacks sufficient privileges (need SUPERUSER or pg_read_all_settings role)\n\
          - Network connectivity issues\n\
          - Invalid connection string\n\
-         - Connection timeout or network issues"
+         - Connection timeout or network issues",
     )?;
 
     tracing::info!("✓ Global objects dumped successfully");
