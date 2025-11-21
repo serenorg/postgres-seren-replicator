@@ -88,6 +88,12 @@ enum Commands {
         /// Ignore any previous checkpoint and start a fresh run
         #[arg(long)]
         no_resume: bool,
+        /// Execute replication remotely on AWS infrastructure
+        #[arg(long)]
+        remote: bool,
+        /// API endpoint for remote execution (defaults to Seren's API)
+        #[arg(long, default_value = "https://api.seren.cloud/replication")]
+        remote_api: String,
     },
     /// Set up continuous logical replication from source to target
     Sync {
@@ -209,7 +215,27 @@ async fn main() -> anyhow::Result<()> {
             drop_existing,
             no_sync,
             no_resume,
+            remote,
+            remote_api,
         } => {
+            // Remote execution path
+            if remote {
+                return init_remote(
+                    source,
+                    target,
+                    yes,
+                    include_databases,
+                    exclude_databases,
+                    include_tables,
+                    exclude_tables,
+                    drop_existing,
+                    no_sync,
+                    remote_api,
+                )
+                .await;
+            }
+
+            // Local execution path (existing code continues below)
             // Interactive mode is default unless --no-interactive or --yes is specified
             // (--yes implies automation, so it disables interactive mode)
             let filter = if !no_interactive && !yes {
@@ -300,6 +326,104 @@ async fn main() -> anyhow::Result<()> {
                 exclude_tables,
             )?;
             commands::verify(&source, &target, Some(filter)).await
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn init_remote(
+    source: String,
+    target: String,
+    yes: bool,
+    include_databases: Option<Vec<String>>,
+    exclude_databases: Option<Vec<String>>,
+    include_tables: Option<Vec<String>>,
+    exclude_tables: Option<Vec<String>>,
+    drop_existing: bool,
+    no_sync: bool,
+    remote_api: String,
+) -> anyhow::Result<()> {
+    use postgres_seren_replicator::remote::{FilterSpec, JobSpec, RemoteClient};
+    use std::collections::HashMap;
+
+    println!("🌐 Remote execution mode enabled");
+    println!("API endpoint: {}", remote_api);
+
+    // Build job specification
+    let filter = if include_databases.is_none()
+        && exclude_databases.is_none()
+        && include_tables.is_none()
+        && exclude_tables.is_none()
+    {
+        None
+    } else {
+        Some(FilterSpec {
+            include_databases,
+            exclude_tables,
+        })
+    };
+
+    let mut options = HashMap::new();
+    options.insert(
+        "drop_existing".to_string(),
+        serde_json::Value::Bool(drop_existing),
+    );
+    options.insert("yes".to_string(), serde_json::Value::Bool(yes));
+    options.insert("enable_sync".to_string(), serde_json::Value::Bool(!no_sync));
+
+    let job_spec = JobSpec {
+        version: "1".to_string(),
+        command: "init".to_string(),
+        source_url: source,
+        target_url: target,
+        filter,
+        options,
+    };
+
+    // Submit job
+    let client = RemoteClient::new(remote_api)?;
+    println!("Submitting replication job...");
+
+    let response = client.submit_job(&job_spec).await?;
+    println!("✓ Job submitted");
+    println!("Job ID: {}", response.job_id);
+    println!("\nPolling for status...");
+
+    // Poll until complete
+    let final_status = client
+        .poll_until_complete(&response.job_id, |status| match status.status.as_str() {
+            "provisioning" => println!("Status: provisioning EC2 instance..."),
+            "running" => {
+                if let Some(ref progress) = status.progress {
+                    println!(
+                        "Status: running ({}/{}): {}",
+                        progress.databases_completed,
+                        progress.databases_total,
+                        progress.current_database.as_deref().unwrap_or("unknown")
+                    );
+                } else {
+                    println!("Status: running...");
+                }
+            }
+            _ => {}
+        })
+        .await?;
+
+    // Display result
+    match final_status.status.as_str() {
+        "completed" => {
+            println!("\n✓ Replication completed successfully");
+            Ok(())
+        }
+        "failed" => {
+            let error_msg = final_status
+                .error
+                .unwrap_or_else(|| "Unknown error".to_string());
+            println!("\n✗ Replication failed: {}", error_msg);
+            anyhow::bail!("Replication failed");
+        }
+        _ => {
+            anyhow::bail!("Unexpected final status: {}", final_status.status);
         }
     }
 }

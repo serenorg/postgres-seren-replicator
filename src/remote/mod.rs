@@ -5,4 +5,4 @@ pub mod client;
 pub mod models;
 
 pub use client::RemoteClient;
-pub use models::{JobResponse, JobSpec, JobStatus};
+pub use models::{FilterSpec, JobResponse, JobSpec, JobStatus};
