@@ -79,7 +79,8 @@ rm amazon-cloudwatch-agent.deb
 log "Cleaning up..."
 sudo apt-get autoremove -y
 sudo apt-get clean
-rm -rf /tmp/*
+# Clean temp files (ignore permission errors on system directories)
+rm -rf /tmp/* 2>/dev/null || true
 
 log "Worker AMI setup complete!"
 log "Summary:"
