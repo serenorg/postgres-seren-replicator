@@ -139,7 +139,7 @@ build {
     inline = [
       "chmod +x /tmp/setup-worker.sh",
       "/tmp/setup-worker.sh",
-      "rm /tmp/setup-worker.sh"
+      "rm -f /tmp/setup-worker.sh"
     ]
   }
 
