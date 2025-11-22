@@ -1,0 +1,26 @@
+# Optional: Remote state backend configuration
+#
+# This file configures Terraform to store state in S3 with DynamoDB locking.
+# This is recommended for team collaboration and production deployments.
+#
+# To enable:
+#   1. Create S3 bucket and DynamoDB table (see backend-config.example.hcl)
+#   2. Copy this file: cp backend.tf.example backend.tf
+#   3. Update the backend configuration values below
+#   4. Run: terraform init -migrate-state
+#
+# IMPORTANT: Once enabled, state will be stored remotely. To revert to local state:
+#   1. Run: terraform init -migrate-state
+#   2. Delete backend.tf
+#   3. Confirm state migration when prompted
+
+terraform {
+  backend "s3" {
+    # These values can also be provided via -backend-config flags or backend-config.hcl
+    # bucket         = "your-terraform-state-bucket"
+    # key            = "seren-replication/terraform.tfstate"
+    # region         = "us-east-1"
+    # encrypt        = true
+    # dynamodb_table = "terraform-state-lock"
+  }
+}
