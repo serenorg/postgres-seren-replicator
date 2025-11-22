@@ -11,5 +11,6 @@ pub mod migration;
 pub mod postgres;
 pub mod remote;
 pub mod replication;
+pub mod sqlite;
 pub mod table_rules;
 pub mod utils;
