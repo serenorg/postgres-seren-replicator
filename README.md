@@ -159,6 +159,128 @@ Validate that all tables match:
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
 
+## Remote Execution (AWS)
+
+By default, the `init` command uses **SerenAI's managed cloud service** to execute replication jobs. This means your replication runs on AWS infrastructure managed by SerenAI, with no AWS account or setup required on your part.
+
+### Benefits of Remote Execution
+
+- **No network interruptions**: Your replication continues even if your laptop loses connectivity
+- **No laptop sleep**: Your computer can sleep or shut down without affecting the job
+- **Faster performance**: Replication runs on dedicated cloud infrastructure closer to your databases
+- **No local resource usage**: Your machine's CPU, memory, and disk are not consumed
+- **Automatic monitoring**: Built-in observability with CloudWatch logs and metrics
+- **Cost-free**: SerenAI covers all AWS infrastructure costs
+
+### How It Works
+
+When you run `init` without the `--local` flag, the tool:
+
+1. **Submits your job** to SerenAI's API with encrypted credentials
+2. **Provisions an EC2 worker** sized appropriately for your database
+3. **Executes replication** on the cloud worker
+4. **Monitors progress** and shows you real-time status updates
+5. **Self-terminates** when complete to minimize costs
+
+Your database credentials are encrypted with AWS KMS and never logged or stored in plaintext.
+
+### Usage Example
+
+Remote execution is the default - just run `init` as normal:
+
+```bash
+# Runs on SerenAI's cloud infrastructure (default)
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/db" \
+  --target "postgresql://user:pass@seren-host:5432/db"
+```
+
+The tool will:
+
+- Submit the job to <https://api.seren.cloud/replication>
+- Show you the job ID and trace ID for monitoring
+- Poll for status updates and display progress
+- Report success or failure when complete
+
+Example output:
+
+```
+Submitting replication job...
+✓ Job submitted
+Job ID: 550e8400-e29b-41d4-a716-446655440000
+Trace ID: 660e8400-e29b-41d4-a716-446655440000
+
+Polling for status...
+Status: provisioning EC2 instance...
+Status: running (1/2): myapp
+Status: running (2/2): analytics
+
+✓ Replication completed successfully
+```
+
+### Local Execution (Fallback)
+
+If you prefer to run replication on your local machine, use the `--local` flag:
+
+```bash
+# Runs on your local machine
+./postgres-seren-replicator init \
+  --source "postgresql://user:pass@source-host:5432/db" \
+  --target "postgresql://user:pass@seren-host:5432/db" \
+  --local
+```
+
+Local execution is useful when:
+
+- You're testing or developing
+- Your databases are not accessible from the internet
+- You need full control over the execution environment
+- You're okay with keeping your machine running during the entire operation
+
+### Advanced Configuration
+
+#### Custom API endpoint (for testing or development)
+
+```bash
+export SEREN_REMOTE_API="https://dev.api.seren.cloud/replication"
+./postgres-seren-replicator init \
+  --source "..." \
+  --target "..."
+```
+
+#### Job timeout (default: 8 hours)
+
+```bash
+# Set 12-hour timeout for very large databases
+./postgres-seren-replicator init \
+  --source "..." \
+  --target "..." \
+  --job-timeout 43200
+```
+
+### Troubleshooting
+
+#### "Failed to submit job to remote service"
+
+- Check your internet connection
+- Verify you can reach <https://api.seren.cloud>
+- Try with `--local` as a fallback
+
+#### Job stuck in "provisioning" state
+
+- AWS may be experiencing capacity issues in the region
+- Wait a few minutes and check status again
+- Contact SerenAI support if it persists for > 10 minutes
+
+#### Job failed with error
+
+- Check the error message in the status response
+- Verify your source and target database credentials
+- Ensure databases are accessible from the internet
+- Try running with `--local` to validate locally first
+
+For more details on the AWS infrastructure and architecture, see the [AWS Setup Guide](docs/aws-setup.md).
+
 ## Selective Replication
 
 Selective replication allows you to choose exactly which databases and tables to replicate, giving you fine-grained control over your migration.
