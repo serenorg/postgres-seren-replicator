@@ -6,6 +6,7 @@ pub mod commands;
 pub mod config;
 pub mod filters;
 pub mod interactive;
+pub mod jsonb;
 pub mod migration;
 pub mod postgres;
 pub mod remote;
