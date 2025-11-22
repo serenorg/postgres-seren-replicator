@@ -379,6 +379,18 @@ resource "aws_cloudwatch_log_group" "provisioner_logs" {
   }
 }
 
+# CloudWatch Log Group for worker EC2 instances
+resource "aws_cloudwatch_log_group" "worker_logs" {
+  name              = "/aws/ec2/seren-replication-worker"
+  retention_in_days = 7
+
+  tags = {
+    Name      = "${var.project_name}-worker-logs"
+    ManagedBy = "terraform"
+    Project   = var.project_name
+  }
+}
+
 # SQS Event Source Mapping for provisioner Lambda
 resource "aws_lambda_event_source_mapping" "sqs_trigger" {
   event_source_arn = aws_sqs_queue.provisioning_queue.arn
