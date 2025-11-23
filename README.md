@@ -26,6 +26,26 @@ This tool enables safe, zero-downtime replication of PostgreSQL databases from a
 - **Real-time Monitoring**: Track replication lag and status continuously
 - **Safe & Fail-fast**: Validates prerequisites before starting replication
 
+## Supported Source Databases
+
+The tool automatically detects your source database type and handles replication accordingly:
+
+- **PostgreSQL** (Primary use case): Zero-downtime replication with continuous sync
+  - Uses logical replication for real-time data synchronization
+  - Supports selective replication with filtering
+  - See below for standard PostgreSQL-to-PostgreSQL workflow
+
+- **SQLite**: One-time migration to PostgreSQL using JSONB storage
+  - See [README-SQLite.md](README-SQLite.md) for SQLite-specific guide
+
+- **MongoDB**: One-time migration to PostgreSQL using JSONB storage
+  - See [README-MongoDB.md](README-MongoDB.md) for MongoDB-specific guide
+
+- **MySQL/MariaDB**: One-time migration to PostgreSQL using JSONB storage
+  - See [README-MySQL.md](README-MySQL.md) for MySQL/MariaDB-specific guide
+
+**Note**: SQLite, MongoDB, and MySQL sources use JSONB storage in PostgreSQL and support one-time migration only (no continuous sync). PostgreSQL-to-PostgreSQL replication supports continuous sync with logical replication.
+
 ## Replication Workflow
 
 The replication process follows 5 phases:
