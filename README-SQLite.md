@@ -1,23 +1,23 @@
-# SQLite Migration Guide
+# SQLite Replication Guide
 
-This guide explains how to migrate SQLite databases to PostgreSQL using seren-replicator's JSONB storage approach.
+This guide explains how to replicate SQLite databases to PostgreSQL using seren-replicator's JSONB storage approach.
 
 ## Overview
 
-The tool automatically detects SQLite database files and migrates them to PostgreSQL using a JSONB storage model. All SQLite data is preserved with full type fidelity, including BLOBs, NULLs, and special float values.
+The tool automatically detects SQLite database files and replicates them to PostgreSQL using a JSONB storage model. All SQLite data is preserved with full type fidelity, including BLOBs, NULLs, and special float values.
 
 **Key Features:**
 - **Zero Configuration**: Automatic source type detection from file extension
 - **Type Preservation**: Lossless conversion of all SQLite types to JSONB
 - **Security First**: Read-only connections, path validation, SQL injection prevention
 - **BLOB Support**: Binary data encoded as base64 in JSONB
-- **Metadata Tracking**: Each row includes source type and migration timestamp
+- **Metadata Tracking**: Each row includes source type and replication timestamp
 
 ## Quick Start
 
-### Basic Migration
+### Basic Replication
 
-Migrate an entire SQLite database to PostgreSQL:
+Replicate an entire SQLite database to PostgreSQL:
 
 ```bash
 seren-replicator init \
@@ -83,7 +83,7 @@ CREATE INDEX IF NOT EXISTS "idx_table_name_source" ON "table_name" (_source_type
 **Field Descriptions:**
 - `id`: String ID from SQLite's ID column or generated row number
 - `data`: JSONB containing all column data from the SQLite row
-- `_source_type`: Always `'sqlite'` for SQLite migrations
+- `_source_type`: Always `'sqlite'` for SQLite replications
 - `_migrated_at`: Timestamp of when the row was migrated
 
 ## Querying Migrated Data
@@ -177,7 +177,7 @@ The tool validates SQLite file paths to prevent attacks:
 All SQLite connections are opened with `SQLITE_OPEN_READ_ONLY` flag:
 - No modifications to source database possible
 - INSERT, UPDATE, DELETE, CREATE, DROP all fail
-- Safe for production database migration
+- Safe for production database replication
 
 ### SQL Injection Prevention
 
@@ -202,13 +202,13 @@ seren-replicator init \
 
 ### Example 2: Query Migrated Data
 
-After migration, query the data:
+After replication, query the data:
 
 ```sql
 -- Connect to PostgreSQL
 psql "postgresql://localhost:5432/mydb"
 
--- List migrated tables
+-- List replicated tables
 \dt
 
 -- View sample data
@@ -252,7 +252,7 @@ WHERE data->'avatar'->>'_type' = 'blob';
 ### Batch Insert Performance
 
 The tool inserts data in batches of 1000 rows for optimal performance:
-- Large databases migrate faster than single-row inserts
+- Large databases replicate faster than single-row inserts
 - PostgreSQL parameters per batch: 3000 (well under 65535 limit)
 - Progress tracking shows estimated completion time
 
@@ -291,14 +291,14 @@ For very large SQLite databases:
 
 ### No Continuous Sync
 
-SQLite migrations are **snapshot-only**:
-- Data migrated at a point in time
+SQLite replications are **snapshot-only**:
+- Data replicated at a point in time
 - No continuous replication like PostgreSQL logical replication
 - Re-running `init` will recreate tables (drop and recreate)
 
 **Workaround for Ongoing Sync:**
 - Use SQLite's backup API to create periodic snapshots
-- Re-run migration with updated snapshot
+- Re-run replication with updated snapshot
 - Consider PostgreSQL FDW for live SQLite querying
 
 ### No Schema Preservation
@@ -310,7 +310,7 @@ SQLite table schemas are not preserved:
 
 **Workaround:**
 - Create views to expose typed columns
-- Add constraints manually after migration
+- Add constraints manually after replication
 - Use triggers to enforce business rules
 
 ### ID Column Detection
@@ -366,7 +366,7 @@ FROM users;
 **Solutions:**
 - SQLite tables with special characters may fail validation
 - Reserved keywords (select, insert, etc.) are rejected for security
-- Rename tables in SQLite before migration if possible
+- Rename tables in SQLite before replication if possible
 
 ### Migration is Slow
 
@@ -383,7 +383,7 @@ FROM users;
 3. **PostgreSQL Performance**: Target server under load
    - Check with `pg_stat_activity`
    - Increase `work_mem` and `maintenance_work_mem` temporarily
-   - Disable autovacuum during migration: `ALTER TABLE foo SET (autovacuum_enabled = false);`
+   - Disable autovacuum during replication: `ALTER TABLE foo SET (autovacuum_enabled = false);`
 
 ## Best Practices
 
@@ -399,7 +399,7 @@ FROM users;
    # Create test database with sample data
    sqlite3 test.db < test_data.sql
 
-   # Test migration
+   # Test replication
    seren-replicator init --source test.db --target "postgresql://localhost/test"
    ```
 
@@ -500,7 +500,7 @@ FROM users;
 
 No. The tool opens SQLite databases in **read-only mode**. It's impossible to modify the source database.
 
-### Can I migrate the same database twice?
+### Can I replicate the same database twice?
 
 Re-running `init` will **drop and recreate** tables. All data will be replaced with fresh data from SQLite. This is useful for:
 - Correcting errors in the first migration
@@ -508,7 +508,7 @@ Re-running `init` will **drop and recreate** tables. All data will be replaced w
 
 ### How do I handle incremental updates?
 
-SQLite migrations are snapshot-only. For incremental updates:
+SQLite replications are snapshot-only. For incremental updates:
 
 1. **Option 1**: Periodic full re-migration
    - Create SQLite backup/snapshot
@@ -523,9 +523,9 @@ SQLite migrations are snapshot-only. For incremental updates:
    - After initial migration, move application to PostgreSQL
    - Retire SQLite database
 
-### Is the source database locked during migration?
+### Is the source database locked during replication?
 
-No. The tool uses `SQLITE_OPEN_READ_ONLY` which allows concurrent readers. Other processes can read the database during migration.
+No. The tool uses `SQLITE_OPEN_READ_ONLY` which allows concurrent readers. Other processes can read the database during replication.
 
 ## Additional Resources
 

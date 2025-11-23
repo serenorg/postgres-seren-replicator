@@ -6,16 +6,16 @@ Zero-downtime database replication using PostgreSQL logical replication with con
 
 ## Overview
 
-This guide covers replicating PostgreSQL databases from any PostgreSQL provider (Neon, AWS RDS, Hetzner, self-hosted, etc.) to another PostgreSQL database (including Seren Cloud). The tool uses PostgreSQL's native logical replication for zero-downtime migration with continuous sync.
+This guide covers replicating PostgreSQL databases from any PostgreSQL provider (Neon, AWS RDS, Hetzner, self-hosted, etc.) to another PostgreSQL database (including Seren Cloud). The tool uses PostgreSQL's native logical replication for zero-downtime replication with continuous sync.
 
 ### Why This Tool?
 
-- **Zero downtime**: Your source database stays online during migration
+- **Zero downtime**: Your source database stays online during replication
 - **Continuous sync**: Changes replicate in real-time after initial snapshot
 - **Multi-provider**: Works with any PostgreSQL-compatible provider
 - **Selective replication**: Choose specific databases and tables
 - **Interactive mode**: User-friendly terminal UI for selecting what to replicate
-- **Remote execution**: Run migrations on SerenAI cloud infrastructure
+- **Remote execution**: Run replications on SerenAI cloud infrastructure
 - **Production-ready**: Data integrity verification, checkpointing, error handling
 
 ### How It Works
@@ -298,7 +298,7 @@ seren-replicator verify \
 
 ## Selective Replication
 
-Selective replication allows you to choose exactly which databases and tables to replicate, giving you fine-grained control over your migration.
+Selective replication allows you to choose exactly which databases and tables to replicate, giving you fine-grained control over your replication.
 
 ### Database-Level Filtering
 
@@ -397,7 +397,7 @@ seren-replicator init \
 
 ### Configuration File (Complex Rules)
 
-Large migrations often need different rules per database. Describe them in TOML and pass `--config` to both `init` and `sync`:
+Large replications often need different rules per database. Describe them in TOML and pass `--config` to both `init` and `sync`:
 
 ```bash
 seren-replicator init \
@@ -520,7 +520,7 @@ Without schema qualification, filtering `"orders"` is ambiguous if you have both
 
 ## Interactive Mode
 
-Interactive mode provides a user-friendly terminal UI for selecting databases and tables to replicate. This is ideal for exploratory migrations or when you're not sure exactly what you want to replicate.
+Interactive mode provides a user-friendly terminal UI for selecting databases and tables to replicate. This is ideal for exploratory replications or when you're not sure exactly what you want to replicate.
 
 **Interactive mode is the default** for `init`, `validate`, and `sync` commands. Simply run the command without any filter flags:
 
@@ -1224,7 +1224,7 @@ Yes, the tool works with TimescaleDB. Use time-based filters for hypertables:
 --time-filter "hypertable_name:time_column:6 months"
 ```
 
-This replicates only recent data from hypertables, reducing migration time significantly.
+This replicates only recent data from hypertables, reducing replication time significantly.
 
 ---
 
