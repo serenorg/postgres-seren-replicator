@@ -42,8 +42,8 @@ use indicatif::{ProgressBar, ProgressStyle};
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::commands::verify;
-/// # use postgres_seren_replicator::filters::ReplicationFilter;
+/// # use seren_replicator::commands::verify;
+/// # use seren_replicator::filters::ReplicationFilter;
 /// # async fn example() -> Result<()> {
 /// // Verify all databases
 /// verify(

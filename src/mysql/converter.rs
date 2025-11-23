@@ -28,7 +28,7 @@ use serde_json::Value as JsonValue;
 ///
 /// ```
 /// # use mysql_async::Value;
-/// # use postgres_seren_replicator::mysql::converter::mysql_value_to_json;
+/// # use seren_replicator::mysql::converter::mysql_value_to_json;
 /// let mysql_val = Value::Int(42);
 /// let json_val = mysql_value_to_json(&mysql_val).unwrap();
 /// assert_eq!(json_val, serde_json::json!(42));
@@ -120,7 +120,7 @@ pub fn mysql_value_to_json(value: &Value) -> Result<JsonValue> {
 ///
 /// ```no_run
 /// # use mysql_async::Row;
-/// # use postgres_seren_replicator::mysql::converter::mysql_row_to_json;
+/// # use seren_replicator::mysql::converter::mysql_row_to_json;
 /// # async fn example(row: Row) -> anyhow::Result<()> {
 /// let column_names = vec!["id".to_string(), "name".to_string()];
 /// let json_obj = mysql_row_to_json(&row, &column_names)?;
@@ -163,7 +163,7 @@ pub fn mysql_row_to_json(row: &Row, column_names: &[String]) -> Result<JsonValue
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mysql::{connect_mysql, converter::get_column_names};
+/// # use seren_replicator::mysql::{connect_mysql, converter::get_column_names};
 /// # async fn example() -> anyhow::Result<()> {
 /// let mut conn = connect_mysql("mysql://localhost:3306/mydb").await?;
 /// let columns = get_column_names(&mut conn, "mydb", "users").await?;
@@ -217,7 +217,7 @@ pub async fn get_column_names(
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mysql::{connect_mysql, converter::convert_table_to_jsonb};
+/// # use seren_replicator::mysql::{connect_mysql, converter::convert_table_to_jsonb};
 /// # async fn example() -> anyhow::Result<()> {
 /// let mut conn = connect_mysql("mysql://localhost:3306/mydb").await?;
 /// let rows = convert_table_to_jsonb(&mut conn, "mydb", "users").await?;

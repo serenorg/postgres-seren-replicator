@@ -21,7 +21,7 @@ use mysql_async::{prelude::*, Conn, Row};
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mysql::{connect_mysql, reader::list_tables};
+/// # use seren_replicator::mysql::{connect_mysql, reader::list_tables};
 /// # async fn example() -> anyhow::Result<()> {
 /// let mut conn = connect_mysql("mysql://localhost:3306/mydb").await?;
 /// let tables = list_tables(&mut conn, "mydb").await?;
@@ -67,7 +67,7 @@ pub async fn list_tables(conn: &mut Conn, db_name: &str) -> Result<Vec<String>> 
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mysql::{connect_mysql, reader::get_table_row_count};
+/// # use seren_replicator::mysql::{connect_mysql, reader::get_table_row_count};
 /// # async fn example() -> anyhow::Result<()> {
 /// let mut conn = connect_mysql("mysql://localhost:3306/mydb").await?;
 /// let count = get_table_row_count(&mut conn, "mydb", "users").await?;
@@ -122,7 +122,7 @@ pub async fn get_table_row_count(
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mysql::{connect_mysql, reader::read_table_data};
+/// # use seren_replicator::mysql::{connect_mysql, reader::read_table_data};
 /// # async fn example() -> anyhow::Result<()> {
 /// let mut conn = connect_mysql("mysql://localhost:3306/mydb").await?;
 /// let rows = read_table_data(&mut conn, "mydb", "users").await?;

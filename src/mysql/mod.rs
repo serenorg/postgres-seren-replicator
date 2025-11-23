@@ -29,7 +29,7 @@ use mysql_async::{Conn, Opts};
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::mysql::validate_mysql_url;
+/// # use seren_replicator::mysql::validate_mysql_url;
 /// // Valid URLs
 /// assert!(validate_mysql_url("mysql://localhost:3306/mydb").is_ok());
 /// assert!(validate_mysql_url("mysql://user:pass@host:3306/db").is_ok());
@@ -80,7 +80,7 @@ pub fn validate_mysql_url(connection_string: &str) -> Result<String> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mysql::connect_mysql;
+/// # use seren_replicator::mysql::connect_mysql;
 /// # async fn example() -> anyhow::Result<()> {
 /// let conn = connect_mysql("mysql://user:pass@localhost:3306/mydb").await?;
 /// # Ok(())
@@ -121,7 +121,7 @@ pub async fn connect_mysql(connection_string: &str) -> Result<Conn> {
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::mysql::extract_database_name;
+/// # use seren_replicator::mysql::extract_database_name;
 /// assert_eq!(
 ///     extract_database_name("mysql://localhost:3306/mydb"),
 ///     Some("mydb".to_string())

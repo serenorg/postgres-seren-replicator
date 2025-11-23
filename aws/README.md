@@ -4,7 +4,7 @@ This directory contains all infrastructure code and scripts for remote replicati
 
 ## SerenAI Managed Service
 
-**Important**: This infrastructure is operated and maintained by SerenAI as a managed service. Users of the `postgres-seren-replicator` CLI tool automatically use this infrastructure by default - no AWS account or setup required.
+**Important**: This infrastructure is operated and maintained by SerenAI as a managed service. Users of the `seren-replicator` CLI tool automatically use this infrastructure by default - no AWS account or setup required.
 
 - **Remote Execution (Default)**: The tool connects to SerenAI's production API and runs replication jobs on SerenAI's AWS infrastructure
 - **Local Execution (Fallback)**: Users can run `--local` to execute replication on their own machine if needed
@@ -112,7 +112,7 @@ cd aws/ec2
 ./build-ami.sh
 export WORKER_AMI_ID=$(aws ec2 describe-images \
   --owners self \
-  --filters "Name=name,Values=postgres-seren-replicator-worker-*" \
+  --filters "Name=name,Values=seren-replicator-worker-*" \
   --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
   --output text)
 
@@ -151,7 +151,7 @@ This script will:
 ```bash
 # Remote execution is the default - no flags needed
 # The tool automatically connects to SerenAI's production API
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source:5432/db" \
   --target "postgresql://user:pass@target:5432/db" \
   --yes
@@ -170,7 +170,7 @@ If SerenAI's remote service is unavailable, you can run locally:
 
 ```bash
 # Use --local to execute on your machine
-postgres-seren-replicator init --local \
+seren-replicator init --local \
   --source "postgresql://user:pass@source:5432/db" \
   --target "postgresql://user:pass@target:5432/db" \
   --yes
@@ -184,7 +184,7 @@ For testing against a development deployment:
 # Override API endpoint
 export SEREN_REMOTE_API="https://dev.api.seren.cloud/replication"
 
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source:5432/db" \
   --target "postgresql://user:pass@target:5432/db" \
   --yes
@@ -269,7 +269,7 @@ cargo build --release
 # Update Terraform with new AMI ID
 export NEW_AMI_ID=$(aws ec2 describe-images \
   --owners self \
-  --filters "Name=name,Values=postgres-seren-replicator-worker-*" \
+  --filters "Name=name,Values=seren-replicator-worker-*" \
   --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
   --output text)
 
@@ -353,7 +353,7 @@ export SEREN_API_KEY=$(cd aws/terraform && terraform output -raw api_key)
 export SEREN_REMOTE_API_KEY="$SEREN_API_KEY"
 
 # Or pass directly to CLI
-postgres-seren-replicator init --remote \
+seren-replicator init --remote \
   --api-key "$SEREN_API_KEY" \
   --source "postgresql://..." \
   --target "postgresql://..." \
@@ -528,7 +528,7 @@ sam local invoke -e event.json
 
 ## Support
 
-- **Issues**: https://github.com/serenorg/postgres-seren-replicator/issues
+- **Issues**: https://github.com/serenorg/seren-replicator/issues
 - **Documentation**: See README.md files in subdirectories
 - **AWS Support**: https://console.aws.amazon.com/support/
 

@@ -114,6 +114,11 @@ All notable changes to this project will be documented in this file.
 
 ⚠️ **Version 3.0.0 introduces breaking changes:**
 
+- **Repository renamed**: `postgres-seren-replicator` → `seren-replicator`
+  - GitHub repository: `serenorg/postgres-seren-replicator` → `serenorg/seren-replicator`
+  - Binary name: `postgres-seren-replicator` → `seren-replicator`
+  - Package name: `postgres-seren-replicator` → `seren-replicator`
+  - Old URLs automatically redirect to new repository
 - **Main README.md structure changed**: Now a landing page with links to database-specific guides
 - **CLI output format may differ**: Source type detection added to output messages
 - **Remote execution job spec**: Added `source_type` field for multi-database support
@@ -127,9 +132,9 @@ All notable changes to this project will be documented in this file.
 
 **New capabilities available**:
 
-- Use SQLite as a source: `postgres-seren-replicator init --source database.db --target "postgresql://..."`
-- Use MongoDB as a source: `postgres-seren-replicator init --source "mongodb://..." --target "postgresql://..."`
-- Use MySQL as a source: `postgres-seren-replicator init --source "mysql://..." --target "postgresql://..."`
+- Use SQLite as a source: `seren-replicator init --source database.db --target "postgresql://..."`
+- Use MongoDB as a source: `seren-replicator init --source "mongodb://..." --target "postgresql://..."`
+- Use MySQL as a source: `seren-replicator init --source "mysql://..." --target "postgresql://..."`
 
 **Documentation updates**:
 

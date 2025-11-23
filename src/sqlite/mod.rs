@@ -33,7 +33,7 @@ use std::path::PathBuf;
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::validate_sqlite_path;
+/// # use seren_replicator::sqlite::validate_sqlite_path;
 /// // Valid paths (when files exist)
 /// assert!(validate_sqlite_path("database.db").is_ok());
 /// assert!(validate_sqlite_path("/tmp/test.sqlite").is_ok());
@@ -109,7 +109,7 @@ pub fn validate_sqlite_path(path: &str) -> Result<PathBuf> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::open_sqlite;
+/// # use seren_replicator::sqlite::open_sqlite;
 /// # fn example() -> anyhow::Result<()> {
 /// let conn = open_sqlite("database.db")?;
 /// // Use connection to read data

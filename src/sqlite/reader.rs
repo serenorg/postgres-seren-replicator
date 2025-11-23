@@ -23,7 +23,7 @@ use std::collections::HashMap;
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::{open_sqlite, reader::list_tables};
+/// # use seren_replicator::sqlite::{open_sqlite, reader::list_tables};
 /// # fn example() -> anyhow::Result<()> {
 /// let conn = open_sqlite("database.db")?;
 /// let tables = list_tables(&conn)?;
@@ -77,8 +77,8 @@ pub fn list_tables(conn: &Connection) -> Result<Vec<String>> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::{open_sqlite, reader::get_table_row_count};
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::sqlite::{open_sqlite, reader::get_table_row_count};
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # fn example() -> anyhow::Result<()> {
 /// let conn = open_sqlite("database.db")?;
 /// let table = "users";
@@ -130,8 +130,8 @@ pub fn get_table_row_count(conn: &Connection, table: &str) -> Result<usize> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::{open_sqlite, reader::read_table_data};
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::sqlite::{open_sqlite, reader::read_table_data};
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # fn example() -> anyhow::Result<()> {
 /// let conn = open_sqlite("database.db")?;
 /// let table = "users";

@@ -23,7 +23,7 @@ use which::which;
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::utils::get_keepalive_env_vars;
+/// # use seren_replicator::utils::get_keepalive_env_vars;
 /// # use std::process::Command;
 /// let keepalive_vars = get_keepalive_env_vars();
 /// let mut cmd = Command::new("psql");
@@ -65,7 +65,7 @@ pub fn get_keepalive_env_vars() -> Vec<(&'static str, &'static str)> {
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::utils::validate_connection_string;
+/// # use seren_replicator::utils::validate_connection_string;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// // Valid connection strings
@@ -129,7 +129,7 @@ pub fn validate_connection_string(url: &str) -> Result<()> {
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::utils::check_required_tools;
+/// # use seren_replicator::utils::check_required_tools;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// // Check if PostgreSQL tools are installed
@@ -183,7 +183,7 @@ pub fn check_required_tools() -> Result<()> {
 /// ```no_run
 /// # use anyhow::Result;
 /// # use std::time::Duration;
-/// # use postgres_seren_replicator::utils::retry_with_backoff;
+/// # use seren_replicator::utils::retry_with_backoff;
 /// # async fn example() -> Result<()> {
 /// let result = retry_with_backoff(
 ///     || async { Ok("success") },
@@ -260,7 +260,7 @@ where
 /// # use anyhow::Result;
 /// # use std::time::Duration;
 /// # use std::process::Command;
-/// # use postgres_seren_replicator::utils::retry_subprocess_with_backoff;
+/// # use seren_replicator::utils::retry_subprocess_with_backoff;
 /// # fn example() -> Result<()> {
 /// retry_subprocess_with_backoff(
 ///     || {
@@ -373,7 +373,7 @@ where
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::utils::validate_postgres_identifier;
+/// # use seren_replicator::utils::validate_postgres_identifier;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// // Valid identifiers
@@ -455,7 +455,7 @@ pub fn validate_postgres_identifier(identifier: &str) -> Result<()> {
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::utils::sanitize_identifier;
+/// # use seren_replicator::utils::sanitize_identifier;
 /// assert_eq!(sanitize_identifier("normal_table"), "normal_table");
 /// assert_eq!(sanitize_identifier("table\x00name"), "tablename");
 /// assert_eq!(sanitize_identifier("table\nname"), "tablename");
@@ -524,7 +524,7 @@ pub fn quote_ident(identifier: &str) -> String {
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::utils::validate_source_target_different;
+/// # use seren_replicator::utils::validate_source_target_different;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// // Valid - different hosts
@@ -773,7 +773,7 @@ impl PostgresUrlParts {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::utils::{PgPassFile, parse_postgres_url};
+/// # use seren_replicator::utils::{PgPassFile, parse_postgres_url};
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// let url = "postgresql://user:pass@localhost:5432/mydb";
@@ -885,7 +885,7 @@ impl Drop for PgPassFile {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::utils::create_managed_temp_dir;
+/// # use seren_replicator::utils::create_managed_temp_dir;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// let temp_path = create_managed_temp_dir()?;
@@ -949,7 +949,7 @@ pub fn create_managed_temp_dir() -> Result<std::path::PathBuf> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::utils::cleanup_stale_temp_dirs;
+/// # use seren_replicator::utils::cleanup_stale_temp_dirs;
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// // Clean up temp directories older than 24 hours
@@ -1049,7 +1049,7 @@ pub fn cleanup_stale_temp_dirs(max_age_secs: u64) -> Result<usize> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::utils::{create_managed_temp_dir, remove_managed_temp_dir};
+/// # use seren_replicator::utils::{create_managed_temp_dir, remove_managed_temp_dir};
 /// # use anyhow::Result;
 /// # fn example() -> Result<()> {
 /// let temp_path = create_managed_temp_dir()?;

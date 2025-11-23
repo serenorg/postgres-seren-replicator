@@ -1,8 +1,8 @@
 // ABOUTME: Security tests for SQLite, MongoDB, MySQL and PostgreSQL replication
 // ABOUTME: Validates protection against path traversal, SQL injection, credential leakage, and injection attacks
 
-use postgres_seren_replicator::sqlite;
 use rusqlite::Connection;
+use seren_replicator::sqlite;
 use std::fs;
 
 /// Helper to create a test SQLite database with unique name
@@ -307,7 +307,7 @@ fn test_command_injection_with_null_bytes() {
 
 #[test]
 fn test_postgresql_url_sanitization() {
-    use postgres_seren_replicator::utils;
+    use seren_replicator::utils;
 
     let url_with_password = "postgresql://admin:secretpass123@host.com:5432/mydb";
     let sanitized =
@@ -328,7 +328,7 @@ fn test_postgresql_url_sanitization() {
 #[test]
 fn test_error_messages_dont_leak_credentials() {
     // Test that strip_password_from_url properly removes passwords
-    use postgres_seren_replicator::utils;
+    use seren_replicator::utils;
 
     let url_with_password = "postgresql://admin:secretpass@host:5432/db";
     let sanitized =
@@ -476,7 +476,7 @@ fn test_valid_table_names_are_accepted() {
     for name in valid_names {
         // We can't actually query these tables since they don't exist,
         // but we can verify the validation doesn't reject them
-        let validation_result = postgres_seren_replicator::jsonb::validate_table_name(name);
+        let validation_result = seren_replicator::jsonb::validate_table_name(name);
         assert!(
             validation_result.is_ok(),
             "Valid table name should pass validation: {}",
@@ -497,7 +497,7 @@ fn test_valid_table_names_are_accepted() {
 
 #[test]
 fn test_mysql_connection_injection_with_shell_commands() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     // NOTE: Current validation only checks for mysql:// prefix
     // These URLs pass basic validation but would fail on actual connection
@@ -525,7 +525,7 @@ fn test_mysql_connection_injection_with_shell_commands() {
 
 #[test]
 fn test_mysql_connection_injection_with_newlines() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     let malicious_urls = vec![
         "mysql://user:pass@host:3306/db\nwhoami",
@@ -547,7 +547,7 @@ fn test_mysql_connection_injection_with_newlines() {
 
 #[test]
 fn test_mysql_connection_injection_with_null_bytes() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     let malicious_url = "mysql://user:pass@host:3306/db\0whoami";
 
@@ -562,7 +562,7 @@ fn test_mysql_connection_injection_with_null_bytes() {
 
 #[test]
 fn test_mysql_invalid_url_prefix() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     let invalid_urls = vec![
         "postgresql://host:5432/db",
@@ -581,7 +581,7 @@ fn test_mysql_invalid_url_prefix() {
 
 #[test]
 fn test_mysql_empty_connection_string() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     let result = mysql::validate_mysql_url("");
     assert!(
@@ -596,7 +596,7 @@ fn test_mysql_empty_connection_string() {
 
 #[test]
 fn test_mysql_table_name_injection_with_drop() {
-    use postgres_seren_replicator::jsonb;
+    use seren_replicator::jsonb;
 
     let malicious_names = vec![
         "users; DROP TABLE users; --",
@@ -624,7 +624,7 @@ fn test_mysql_table_name_injection_with_drop() {
 
 #[test]
 fn test_mysql_table_name_injection_with_union() {
-    use postgres_seren_replicator::jsonb;
+    use seren_replicator::jsonb;
 
     let malicious_names = vec![
         "users UNION SELECT * FROM passwords",
@@ -644,7 +644,7 @@ fn test_mysql_table_name_injection_with_union() {
 
 #[test]
 fn test_mysql_table_name_injection_with_comments() {
-    use postgres_seren_replicator::jsonb;
+    use seren_replicator::jsonb;
 
     let malicious_names = vec![
         "users--",
@@ -666,7 +666,7 @@ fn test_mysql_table_name_injection_with_comments() {
 
 #[test]
 fn test_mysql_table_name_injection_with_boolean_logic() {
-    use postgres_seren_replicator::jsonb;
+    use seren_replicator::jsonb;
 
     let malicious_names = vec![
         "users OR 1=1",
@@ -687,7 +687,7 @@ fn test_mysql_table_name_injection_with_boolean_logic() {
 
 #[test]
 fn test_mysql_reserved_keywords_as_table_names() {
-    use postgres_seren_replicator::jsonb;
+    use seren_replicator::jsonb;
 
     // Reserved keywords are rejected to prevent confusion and potential issues
     let reserved_names = vec![
@@ -709,7 +709,7 @@ fn test_mysql_reserved_keywords_as_table_names() {
 
 #[test]
 fn test_mysql_backtick_injection() {
-    use postgres_seren_replicator::jsonb;
+    use seren_replicator::jsonb;
 
     // MySQL uses backticks for identifiers, test that they're properly handled
     let malicious_names = vec![
@@ -735,7 +735,7 @@ fn test_mysql_backtick_injection() {
 
 #[test]
 fn test_mysql_url_sanitization() {
-    use postgres_seren_replicator::utils;
+    use seren_replicator::utils;
 
     let url_with_password = "mysql://admin:secretpass123@host.com:3306/mydb";
     let result = utils::strip_password_from_url(url_with_password);
@@ -760,7 +760,7 @@ fn test_mysql_url_sanitization() {
 
 #[test]
 fn test_mysql_url_with_special_chars_in_password() {
-    use postgres_seren_replicator::utils;
+    use seren_replicator::utils;
 
     // Test passwords with special characters that might break parsing
     let urls_with_special_passwords = vec![
@@ -785,7 +785,7 @@ fn test_mysql_url_with_special_chars_in_password() {
 
 #[test]
 fn test_mysql_error_messages_dont_leak_credentials() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     // SECURITY NOTE: Current implementation includes full URL in error messages
     // This test documents the current behavior - ideally this should be fixed
@@ -822,7 +822,7 @@ fn test_mysql_error_messages_dont_leak_credentials() {
 
 #[test]
 fn test_mysql_url_with_command_substitution() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     let malicious_urls = vec![
         "mysql://user:pass@host:3306/`whoami`",
@@ -846,7 +846,7 @@ fn test_mysql_url_with_command_substitution() {
 
 #[test]
 fn test_mysql_url_with_path_traversal() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     // While MySQL URLs don't use file paths like SQLite,
     // test that path traversal in database names is rejected
@@ -886,7 +886,7 @@ fn test_mysql_url_with_path_traversal() {
 
 #[test]
 fn test_valid_mysql_urls_are_accepted() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     let valid_urls = vec![
         "mysql://localhost:3306/mydb",
@@ -909,7 +909,7 @@ fn test_valid_mysql_urls_are_accepted() {
 
 #[test]
 fn test_valid_mysql_table_names_are_accepted() {
-    use postgres_seren_replicator::jsonb;
+    use seren_replicator::jsonb;
 
     // Valid MySQL table names
     let valid_names = vec![
@@ -933,7 +933,7 @@ fn test_valid_mysql_table_names_are_accepted() {
 
 #[test]
 fn test_mysql_database_names_with_underscores_accepted() {
-    use postgres_seren_replicator::mysql;
+    use seren_replicator::mysql;
 
     // Database names with underscores are valid
     let valid_urls = vec![

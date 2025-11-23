@@ -2007,36 +2007,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "postgres-seren-replicator"
-version = "3.0.0"
-dependencies = [
- "anyhow",
- "base64 0.21.7",
- "bson",
- "clap",
- "dialoguer",
- "futures",
- "indicatif",
- "mongodb",
- "mysql_async",
- "native-tls",
- "postgres-native-tls",
- "rand 0.8.5",
- "reqwest",
- "rusqlite",
- "serde",
- "serde_json",
- "sha2",
- "tempfile",
- "tokio",
- "tokio-postgres",
- "toml",
- "tracing",
- "tracing-subscriber",
- "which",
-]
-
-[[package]]
 name = "postgres-types"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2658,6 +2628,36 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "seren-replicator"
+version = "3.0.0"
+dependencies = [
+ "anyhow",
+ "base64 0.21.7",
+ "bson",
+ "clap",
+ "dialoguer",
+ "futures",
+ "indicatif",
+ "mongodb",
+ "mysql_async",
+ "native-tls",
+ "postgres-native-tls",
+ "rand 0.8.5",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "tokio",
+ "tokio-postgres",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "which",
 ]
 
 [[package]]

@@ -52,8 +52,8 @@ use anyhow::{Context, Result};
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::commands::sync;
-/// # use postgres_seren_replicator::filters::ReplicationFilter;
+/// # use seren_replicator::commands::sync;
+/// # use seren_replicator::filters::ReplicationFilter;
 /// # async fn example() -> Result<()> {
 /// // Replicate all databases
 /// sync(

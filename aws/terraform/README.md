@@ -43,7 +43,7 @@ This directory contains Terraform configuration to deploy the AWS infrastructure
    ```
 
 4. **Worker AMI**:
-   Build an AMI with `postgres-seren-replicator` installed (see AMI creation guide).
+   Build an AMI with `seren-replicator` installed (see AMI creation guide).
 
 ## Deployment
 
@@ -175,6 +175,6 @@ Ensure your AWS credentials have permissions to create:
 ### Worker instances fail to start
 
 Ensure `worker_ami_id` points to a valid AMI with:
-- `postgres-seren-replicator` binary installed at `/opt/seren-replicator/`
+- `seren-replicator` binary installed at `/opt/seren-replicator/`
 - `worker.sh` script at `/opt/seren-replicator/worker.sh`
 - PostgreSQL client tools installed

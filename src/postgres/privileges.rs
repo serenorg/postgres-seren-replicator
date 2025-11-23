@@ -40,7 +40,7 @@ pub struct PrivilegeCheck {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::postgres::{connect, check_source_privileges};
+/// # use seren_replicator::postgres::{connect, check_source_privileges};
 /// # async fn example() -> Result<()> {
 /// let client = connect("postgresql://user:pass@localhost:5432/mydb").await?;
 /// let privs = check_source_privileges(&client).await?;
@@ -89,7 +89,7 @@ pub async fn check_source_privileges(client: &Client) -> Result<PrivilegeCheck> 
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::postgres::{connect, check_target_privileges};
+/// # use seren_replicator::postgres::{connect, check_target_privileges};
 /// # async fn example() -> Result<()> {
 /// let client = connect("postgresql://user:pass@localhost:5432/mydb").await?;
 /// let privs = check_target_privileges(&client).await?;
@@ -123,7 +123,7 @@ pub async fn check_target_privileges(client: &Client) -> Result<PrivilegeCheck> 
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::postgres::{connect, check_wal_level};
+/// # use seren_replicator::postgres::{connect, check_wal_level};
 /// # async fn example() -> Result<()> {
 /// let client = connect("postgresql://user:pass@localhost:5432/mydb").await?;
 /// let wal_level = check_wal_level(&client).await?;

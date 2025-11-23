@@ -26,7 +26,7 @@ use std::collections::HashMap;
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::converter::sqlite_value_to_json;
+/// # use seren_replicator::sqlite::converter::sqlite_value_to_json;
 /// # use rusqlite::types::Value;
 /// let sqlite_int = Value::Integer(42);
 /// let json = sqlite_value_to_json(&sqlite_int).unwrap();
@@ -82,7 +82,7 @@ pub fn sqlite_value_to_json(value: &rusqlite::types::Value) -> Result<JsonValue>
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::converter::sqlite_row_to_json;
+/// # use seren_replicator::sqlite::converter::sqlite_row_to_json;
 /// # use std::collections::HashMap;
 /// # use rusqlite::types::Value;
 /// let mut row = HashMap::new();
@@ -131,8 +131,8 @@ pub fn sqlite_row_to_json(row: HashMap<String, rusqlite::types::Value>) -> Resul
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::sqlite::{open_sqlite, converter::convert_table_to_jsonb};
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::sqlite::{open_sqlite, converter::convert_table_to_jsonb};
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # fn example() -> anyhow::Result<()> {
 /// let conn = open_sqlite("database.db")?;
 /// let table = "users";

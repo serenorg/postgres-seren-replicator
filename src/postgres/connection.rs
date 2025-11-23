@@ -33,7 +33,7 @@ use tokio_postgres::Client;
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::postgres::connection::add_keepalive_params;
+/// # use seren_replicator::postgres::connection::add_keepalive_params;
 /// let url = "postgresql://user:pass@host:5432/db";
 /// let url_with_keepalives = add_keepalive_params(url);
 /// assert!(url_with_keepalives.contains("keepalives=1"));
@@ -112,7 +112,7 @@ pub fn add_keepalive_params(connection_string: &str) -> String {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::postgres::connect;
+/// # use seren_replicator::postgres::connect;
 /// # async fn example() -> Result<()> {
 /// let client = connect("postgresql://user:pass@localhost:5432/mydb").await?;
 /// # Ok(())
@@ -224,7 +224,7 @@ pub async fn connect(connection_string: &str) -> Result<Client> {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::postgres::connection::connect_with_retry;
+/// # use seren_replicator::postgres::connection::connect_with_retry;
 /// # async fn example() -> Result<()> {
 /// let client = connect_with_retry("postgresql://user:pass@localhost:5432/mydb").await?;
 /// # Ok(())

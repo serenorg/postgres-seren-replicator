@@ -91,7 +91,7 @@ The PostgreSQL replication process follows 5 phases:
 Check that both databases meet replication requirements:
 
 ```bash
-postgres-seren-replicator validate \
+seren-replicator validate \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -107,7 +107,7 @@ The validate command checks:
 **With filtering:**
 
 ```bash
-postgres-seren-replicator validate \
+seren-replicator validate \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --include-databases "myapp,analytics"
@@ -120,7 +120,7 @@ postgres-seren-replicator validate \
 Perform initial snapshot replication with schema and data:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -154,25 +154,25 @@ Proceed with replication? [y/N]:
 
 ```bash
 # Skip confirmation prompt (for scripts)
-postgres-seren-replicator init \
+seren-replicator init \
   --source "..." \
   --target "..." \
   --yes
 
 # Drop existing target database and recreate
-postgres-seren-replicator init \
+seren-replicator init \
   --source "..." \
   --target "..." \
   --drop-existing
 
 # Run locally instead of on cloud infrastructure
-postgres-seren-replicator init \
+seren-replicator init \
   --source "..." \
   --target "..." \
   --local
 
 # Disable checkpoint resume (start fresh)
-postgres-seren-replicator init \
+seren-replicator init \
   --source "..." \
   --target "..." \
   --no-resume
@@ -191,7 +191,7 @@ To discard the checkpoint and start fresh, use `--no-resume` (a new checkpoint w
 Set up continuous logical replication for ongoing change synchronization:
 
 ```bash
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -207,13 +207,13 @@ postgres-seren-replicator sync \
 
 ```bash
 # Sync only specific databases
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --include-databases "myapp,analytics"
 
 # Sync with table exclusions
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "..." \
   --target "..." \
   --exclude-tables "myapp.logs,myapp.cache"
@@ -238,7 +238,7 @@ See [Security](#security) section for details.
 Monitor replication health and lag in real-time:
 
 ```bash
-postgres-seren-replicator status \
+seren-replicator status \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -253,7 +253,7 @@ postgres-seren-replicator status \
 **With filtering:**
 
 ```bash
-postgres-seren-replicator status \
+seren-replicator status \
   --source "..." \
   --target "..." \
   --include-databases "myapp"
@@ -263,7 +263,7 @@ postgres-seren-replicator status \
 
 ```bash
 # Check status every 5 seconds
-watch -n 5 'postgres-seren-replicator status --source "$SOURCE" --target "$TARGET"'
+watch -n 5 'seren-replicator status --source "$SOURCE" --target "$TARGET"'
 ```
 
 ---
@@ -273,7 +273,7 @@ watch -n 5 'postgres-seren-replicator status --source "$SOURCE" --target "$TARGE
 Validate data integrity by comparing checksums between source and target:
 
 ```bash
-postgres-seren-replicator verify \
+seren-replicator verify \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -287,7 +287,7 @@ postgres-seren-replicator verify \
 **With filtering:**
 
 ```bash
-postgres-seren-replicator verify \
+seren-replicator verify \
   --source "..." \
   --target "..." \
   --include-databases "myapp" \
@@ -306,13 +306,13 @@ Replicate only specific databases:
 
 ```bash
 # Include only specific databases
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --include-databases "myapp,analytics"
 
 # Exclude specific databases
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --exclude-databases "test,staging"
@@ -326,13 +326,13 @@ Replicate only specific tables or exclude certain tables:
 
 ```bash
 # Include only specific tables (format: database.table)
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --include-tables "myapp.users,myapp.orders,analytics.events"
 
 # Exclude specific tables
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --exclude-tables "myapp.logs,myapp.cache,analytics.temp_data"
@@ -345,7 +345,7 @@ postgres-seren-replicator init \
 Skip data for heavy archives while keeping the schema in sync:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SRC" \
   --target "$TGT" \
   --schema-only-tables "myapp.audit_logs,analytics.evmlog_strides"
@@ -358,7 +358,7 @@ Schema-only tables are recreated with full DDL but no rows, which dramatically r
 Filter tables down to the rows you actually need:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SRC" \
   --target "$TGT" \
   --table-filter "output:series_time >= NOW() - INTERVAL '6 months'" \
@@ -372,7 +372,7 @@ Each `--table-filter` takes `[db.]table:SQL predicate`. During `init`, data is s
 For time-series tables (e.g., TimescaleDB hypertables) use the shorthand `table:column:window`:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SRC" \
   --target "$TGT" \
   --time-filter "metrics:created_at:6 months" \
@@ -386,7 +386,7 @@ Supported window units: seconds, minutes, hours, days, weeks, months, and years.
 Combine database, table, and predicate filtering for precise control:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@seren-host:5432/postgres" \
   --include-databases "myapp,analytics" \
@@ -400,7 +400,7 @@ postgres-seren-replicator init \
 Large migrations often need different rules per database. Describe them in TOML and pass `--config` to both `init` and `sync`:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SRC" \
   --target "$TGT" \
   --config replication-config.toml
@@ -447,20 +447,20 @@ PostgreSQL databases can have multiple schemas (namespaces) with identically-nam
 
 ```bash
 # Include tables from specific schemas
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SRC" \
   --target "$TGT" \
   --schema-only-tables "analytics.large_table,public.temp"
 
 # Filter tables in non-public schemas
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SRC" \
   --target "$TGT" \
   --table-filter "analytics.events:created_at > NOW() - INTERVAL '90 days'" \
   --table-filter "reporting.metrics:status = 'active'"
 
 # Time filters with schema qualification
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SRC" \
   --target "$TGT" \
   --time-filter "analytics.metrics:timestamp:6 months"
@@ -525,7 +525,7 @@ Interactive mode provides a user-friendly terminal UI for selecting databases an
 **Interactive mode is the default** for `init`, `validate`, and `sync` commands. Simply run the command without any filter flags:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres"
 ```
@@ -601,7 +601,7 @@ Proceed with this configuration? [Y/n]:
 To use CLI filter flags instead of interactive mode, add the `--no-interactive` flag:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@seren-host:5432/postgres" \
   --no-interactive \
@@ -643,7 +643,7 @@ Remote execution is the default - just run `init` as normal:
 
 ```bash
 # Runs on SerenAI's cloud infrastructure (default)
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
@@ -677,7 +677,7 @@ If you prefer to run replication on your local machine, use the `--local` flag:
 
 ```bash
 # Runs on your local machine
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db" \
   --local
@@ -696,7 +696,7 @@ Local execution is useful when:
 
 ```bash
 export SEREN_REMOTE_API="https://dev.api.seren.cloud/replication"
-postgres-seren-replicator init \
+seren-replicator init \
   --source "..." \
   --target "..."
 ```
@@ -705,7 +705,7 @@ postgres-seren-replicator init \
 
 ```bash
 # Set 12-hour timeout for very large databases
-postgres-seren-replicator init \
+seren-replicator init \
   --source "..." \
   --target "..." \
   --job-timeout 43200
@@ -743,7 +743,7 @@ The tool works seamlessly with any PostgreSQL-compatible database provider. Here
 ### Neon
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@ep-cool-name-123456.us-east-2.aws.neon.tech/mydb" \
   --target "postgresql://user:pass@seren-host:5432/mydb"
 ```
@@ -751,7 +751,7 @@ postgres-seren-replicator init \
 ### AWS RDS
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@mydb.abc123.us-east-1.rds.amazonaws.com:5432/mydb" \
   --target "postgresql://user:pass@seren-host:5432/mydb"
 ```
@@ -765,7 +765,7 @@ GRANT rds_replication TO myuser;
 ### Hetzner Cloud
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@postgres-server.hetzner-cloud.de:5432/mydb" \
   --target "postgresql://user:pass@seren-host:5432/mydb"
 ```
@@ -773,7 +773,7 @@ postgres-seren-replicator init \
 ### Self-Hosted PostgreSQL
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@192.168.1.100:5432/mydb" \
   --target "postgresql://user:pass@seren-host:5432/mydb"
 ```
@@ -841,7 +841,7 @@ To avoid storing passwords in the subscription catalog, configure a `.pgpass` fi
 
    ```bash
    # Omit password from source URL
-   postgres-seren-replicator sync \
+   seren-replicator sync \
      --source "postgresql://user@source-host:5432/db" \
      --target "postgresql://user:pass@target-host:5432/db"
    ```
@@ -931,7 +931,7 @@ Check status frequently during replication:
 
 ```bash
 # Monitor until lag < 1 second
-watch -n 5 'postgres-seren-replicator status --source "$SOURCE" --target "$TARGET"'
+watch -n 5 'seren-replicator status --source "$SOURCE" --target "$TARGET"'
 ```
 
 If lag is high:
@@ -985,7 +985,7 @@ When using filtered snapshots (table-level WHERE clauses or time filters), table
 
 ```bash
 # If you're filtering orders, also include users table
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SOURCE" \
   --target "$TARGET" \
   --config replication.toml  # Include all FK-related tables
@@ -1039,12 +1039,12 @@ psql <url> -c "SELECT pid, state, query FROM pg_stat_activity WHERE state != 'id
 Replicate entire database with all tables:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/mydb" \
   --target "postgresql://user:pass@target-host:5432/mydb" \
   --yes
 
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "postgresql://user:pass@source-host:5432/mydb" \
   --target "postgresql://user:pass@target-host:5432/mydb"
 ```
@@ -1056,13 +1056,13 @@ postgres-seren-replicator sync \
 Replicate only specific databases:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --include-databases "production,analytics" \
   --yes
 
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --include-databases "production,analytics"
@@ -1075,7 +1075,7 @@ postgres-seren-replicator sync \
 Replicate only recent data:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/mydb" \
   --target "postgresql://user:pass@target-host:5432/mydb" \
   --time-filter "events:created_at:6 months" \
@@ -1083,7 +1083,7 @@ postgres-seren-replicator init \
   --schema-only-tables "audit_logs,archive_table" \
   --yes
 
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "postgresql://user:pass@source-host:5432/mydb" \
   --target "postgresql://user:pass@target-host:5432/mydb" \
   --time-filter "events:created_at:6 months" \
@@ -1120,13 +1120,13 @@ last = "6 months"
 Run replication:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --config replication.toml \
   --yes
 
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "postgresql://user:pass@source-host:5432/postgres" \
   --target "postgresql://user:pass@target-host:5432/postgres" \
   --config replication.toml
@@ -1139,7 +1139,7 @@ postgres-seren-replicator sync \
 Run replication locally instead of on cloud infrastructure:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/mydb" \
   --target "postgresql://user:pass@target-host:5432/mydb" \
   --local \

@@ -26,7 +26,7 @@ use mongodb::{Client, Database};
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::{connect_mongodb, reader::list_collections};
+/// # use seren_replicator::mongodb::{connect_mongodb, reader::list_collections};
 /// # async fn example() -> anyhow::Result<()> {
 /// let client = connect_mongodb("mongodb://localhost:27017/mydb").await?;
 /// let collections = list_collections(&client, "mydb").await?;
@@ -79,8 +79,8 @@ pub async fn list_collections(client: &Client, db_name: &str) -> Result<Vec<Stri
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::{connect_mongodb, reader::get_collection_count};
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::mongodb::{connect_mongodb, reader::get_collection_count};
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # async fn example() -> anyhow::Result<()> {
 /// let client = connect_mongodb("mongodb://localhost:27017/mydb").await?;
 /// let db = client.database("mydb");
@@ -138,8 +138,8 @@ pub async fn get_collection_count(database: &Database, collection_name: &str) ->
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::{connect_mongodb, reader::read_collection_data};
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::mongodb::{connect_mongodb, reader::read_collection_data};
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # async fn example() -> anyhow::Result<()> {
 /// let client = connect_mongodb("mongodb://localhost:27017/mydb").await?;
 /// let db = client.database("mydb");

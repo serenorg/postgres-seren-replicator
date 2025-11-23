@@ -1,6 +1,6 @@
 # SQLite Migration Guide
 
-This guide explains how to migrate SQLite databases to PostgreSQL using postgres-seren-replicator's JSONB storage approach.
+This guide explains how to migrate SQLite databases to PostgreSQL using seren-replicator's JSONB storage approach.
 
 ## Overview
 
@@ -20,7 +20,7 @@ The tool automatically detects SQLite database files and migrates them to Postgr
 Migrate an entire SQLite database to PostgreSQL:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source /path/to/database.db \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -195,7 +195,7 @@ Table names are validated before use in SQL:
 wget https://example.com/sample.db
 
 # Migrate to PostgreSQL
-postgres-seren-replicator init \
+seren-replicator init \
   --source ./sample.db \
   --target "postgresql://localhost:5432/mydb"
 ```
@@ -400,7 +400,7 @@ FROM users;
    sqlite3 test.db < test_data.sql
 
    # Test migration
-   postgres-seren-replicator init --source test.db --target "postgresql://localhost/test"
+   seren-replicator init --source test.db --target "postgresql://localhost/test"
    ```
 
 3. **Verify PostgreSQL Space**
@@ -531,10 +531,10 @@ No. The tool uses `SQLITE_OPEN_READ_ONLY` which allows concurrent readers. Other
 
 - [Main README](README.md) - PostgreSQL-to-PostgreSQL migration
 - [CHANGELOG](CHANGELOG.md) - Version history
-- [GitHub Issues](https://github.com/serenorg/postgres-seren-replicator/issues) - Report bugs or request features
+- [GitHub Issues](https://github.com/serenorg/seren-replicator/issues) - Report bugs or request features
 
 ## Support
 
 For issues or questions:
-- **GitHub Issues**: https://github.com/serenorg/postgres-seren-replicator/issues
+- **GitHub Issues**: https://github.com/serenorg/seren-replicator/issues
 - **Email**: support@seren.ai

@@ -48,8 +48,8 @@ use tokio_postgres::Client;
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::commands::init;
-/// # use postgres_seren_replicator::filters::ReplicationFilter;
+/// # use seren_replicator::commands::init;
+/// # use seren_replicator::filters::ReplicationFilter;
 /// # async fn example() -> Result<()> {
 /// // With confirmation prompt and automatic sync (default)
 /// init(
@@ -714,7 +714,7 @@ async fn drop_database_if_exists(target_conn: &Client, db_name: &str) -> Result<
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::commands::init::init_sqlite_to_postgres;
+/// # use seren_replicator::commands::init::init_sqlite_to_postgres;
 /// # async fn example() -> Result<()> {
 /// init_sqlite_to_postgres(
 ///     "database.db",
@@ -841,7 +841,7 @@ pub async fn init_sqlite_to_postgres(sqlite_path: &str, target_url: &str) -> Res
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::commands::init::init_mongodb_to_postgres;
+/// # use seren_replicator::commands::init::init_mongodb_to_postgres;
 /// # async fn example() -> Result<()> {
 /// init_mongodb_to_postgres(
 ///     "mongodb://localhost:27017/mydb",
@@ -995,7 +995,7 @@ pub async fn init_mongodb_to_postgres(mongo_url: &str, target_url: &str) -> Resu
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::commands::init::init_mysql_to_postgres;
+/// # use seren_replicator::commands::init::init_mysql_to_postgres;
 /// # async fn example() -> Result<()> {
 /// init_mysql_to_postgres(
 ///     "mysql://user:pass@localhost:3306/mydb",

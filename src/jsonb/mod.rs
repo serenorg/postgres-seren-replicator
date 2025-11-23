@@ -26,7 +26,7 @@ use anyhow::{bail, Result};
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::jsonb::validate_table_name;
 /// assert!(validate_table_name("users").is_ok());
 /// assert!(validate_table_name("user_events_2024").is_ok());
 /// assert!(validate_table_name("users; DROP TABLE users;").is_err());

@@ -33,7 +33,7 @@ The worker AMI must have the following installed:
 
 ### Required Files
 
-- `/opt/seren-replicator/postgres-seren-replicator` - Replicator binary (executable)
+- `/opt/seren-replicator/seren-replicator` - Replicator binary (executable)
 - `/opt/seren-replicator/worker.sh` - Worker bootstrap script (executable)
 
 ### IAM Role
@@ -57,7 +57,7 @@ brew install packer
 cargo build --release
 
 # Verify binary
-./target/release/postgres-seren-replicator --version
+./target/release/seren-replicator --version
 ```
 
 ### Build AMI
@@ -68,7 +68,7 @@ cargo build --release
 
 # Or manually with Packer
 packer init .
-packer build -var "binary_path=../../target/release/postgres-seren-replicator" worker-ami.pkr.hcl
+packer build -var "binary_path=../../target/release/seren-replicator" worker-ami.pkr.hcl
 ```
 
 The build process:
@@ -88,7 +88,7 @@ Build time: ~10 minutes
 # After build completes
 aws ec2 describe-images \
   --owners self \
-  --filters "Name=name,Values=postgres-seren-replicator-worker-*" \
+  --filters "Name=name,Values=seren-replicator-worker-*" \
   --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
   --output text
 ```
@@ -126,7 +126,7 @@ The worker script is invoked automatically by the EC2 user data script:
 
 1. **Parse Job Spec**: Read JSON file and extract parameters
 2. **Update Status**: Set DynamoDB status to "running"
-3. **Build Command**: Construct `postgres-seren-replicator` command with all flags
+3. **Build Command**: Construct `seren-replicator` command with all flags
 4. **Execute**: Run replication with proper error handling
 5. **Update Status**: Set "completed" or "failed" based on result
 6. **Self-Terminate**: Shut down EC2 instance to stop charges
@@ -183,7 +183,7 @@ Ensure the IAM instance profile has `dynamodb:UpdateItem` and `dynamodb:GetItem`
 
 ### Replicator binary not found
 
-Verify the binary was copied to `/opt/seren-replicator/postgres-seren-replicator` and is executable:
+Verify the binary was copied to `/opt/seren-replicator/seren-replicator` and is executable:
 ```bash
 ssh ec2-user@instance
 ls -la /opt/seren-replicator/

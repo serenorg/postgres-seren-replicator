@@ -1,7 +1,7 @@
 // ABOUTME: Integration tests for the full replication workflow
 // ABOUTME: Tests all commands end-to-end with real database connections
 
-use postgres_seren_replicator::commands;
+use seren_replicator::commands;
 use std::env;
 
 /// Helper to get test database URLs from environment
@@ -18,7 +18,7 @@ async fn test_validate_command_integration() {
         get_test_urls().expect("TEST_SOURCE_URL and TEST_TARGET_URL must be set");
 
     println!("Testing validate command...");
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let result = commands::validate(&source_url, &target_url, filter).await;
 
     match &result {
@@ -46,7 +46,7 @@ async fn test_init_command_integration() {
     println!("⚠ WARNING: This will copy all data from source to target!");
 
     // Skip confirmation for automated tests, disable sync to keep test simple
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let result = commands::init(&source_url, &target_url, true, filter, false, false, true).await;
 
     match &result {
@@ -70,7 +70,7 @@ async fn test_sync_command_integration() {
     println!("Testing sync command...");
     println!("⚠ WARNING: This will set up logical replication!");
 
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let result = commands::sync(
         &source_url,
         &target_url,
@@ -161,7 +161,7 @@ async fn test_full_replication_workflow() {
 
     // Step 1: Validate
     println!("STEP 1: Validate databases...");
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let validate_result = commands::validate(&source_url, &target_url, filter).await;
     match &validate_result {
         Ok(_) => println!("✓ Validation passed"),
@@ -176,7 +176,7 @@ async fn test_full_replication_workflow() {
     // Uncomment this section to test the full workflow including data copy
     /*
     println!("STEP 2: Initialize replication...");
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let init_result =
         commands::init(&source_url, &target_url, true, filter, false, true, true).await;
     match &init_result {
@@ -193,7 +193,7 @@ async fn test_full_replication_workflow() {
     // Step 3: Sync (commented out by default)
     /*
     println!("STEP 3: Set up logical replication...");
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let sync_result = commands::sync(&source_url, &target_url, Some(filter), None, None, Some(60)).await;
     match &sync_result {
         Ok(_) => println!("✓ Sync completed"),
@@ -249,7 +249,7 @@ async fn test_error_handling_bad_source_url() {
     let bad_source = "postgresql://invalid:invalid@nonexistent:5432/invalid";
     let (_, target_url) = get_test_urls().expect("TEST_TARGET_URL must be set");
 
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let result = commands::validate(bad_source, &target_url, filter).await;
 
     // Should fail gracefully with connection error
@@ -265,7 +265,7 @@ async fn test_error_handling_bad_target_url() {
     let (source_url, _) = get_test_urls().expect("TEST_SOURCE_URL must be set");
     let bad_target = "postgresql://invalid:invalid@nonexistent:5432/invalid";
 
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::empty();
+    let filter = seren_replicator::filters::ReplicationFilter::empty();
     let result = commands::validate(&source_url, bad_target, filter).await;
 
     // Should fail gracefully with connection error
@@ -284,7 +284,7 @@ async fn test_init_with_database_filter() {
 
     // Create filter that includes only specific database
     // Note: Adjust the database name based on your test environment
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+    let filter = seren_replicator::filters::ReplicationFilter::new(
         Some(vec!["postgres".to_string()]), // Include only postgres database
         None,
         None,
@@ -318,7 +318,7 @@ async fn test_init_with_table_filter() {
 
     // Create filter that excludes specific tables
     // Note: Adjust the table names based on your test environment
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+    let filter = seren_replicator::filters::ReplicationFilter::new(
         None,
         None,
         None,
@@ -352,7 +352,7 @@ async fn test_sync_with_table_filter() {
 
     // Create filter that excludes certain tables
     // This test assumes the database has some tables to filter
-    let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+    let filter = seren_replicator::filters::ReplicationFilter::new(
         None,
         None,
         None,
@@ -383,19 +383,16 @@ async fn test_sync_with_table_filter() {
             println!("✓ Sync with table filter completed successfully");
 
             // Clean up
-            let target_client = postgres_seren_replicator::postgres::connect(&target_url)
+            let target_client = seren_replicator::postgres::connect(&target_url)
                 .await
                 .unwrap();
             let _ =
-                postgres_seren_replicator::replication::drop_subscription(&target_client, sub_name)
-                    .await;
+                seren_replicator::replication::drop_subscription(&target_client, sub_name).await;
 
-            let source_client = postgres_seren_replicator::postgres::connect(&source_url)
+            let source_client = seren_replicator::postgres::connect(&source_url)
                 .await
                 .unwrap();
-            let _ =
-                postgres_seren_replicator::replication::drop_publication(&source_client, pub_name)
-                    .await;
+            let _ = seren_replicator::replication::drop_publication(&source_client, pub_name).await;
         }
         Err(e) => {
             println!("Sync with table filter failed: {:?}", e);

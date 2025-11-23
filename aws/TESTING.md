@@ -28,7 +28,7 @@ This document describes the integration testing setup and readiness for remote r
 ### Testing Prerequisites
 
 All prerequisites are satisfied:
-- ✅ Release binary built: `target/release/postgres-seren-replicator`
+- ✅ Release binary built: `target/release/seren-replicator`
 - ✅ Terraform installed: v1.5.7
 - ✅ Docker available for test databases
 - ✅ All scripts have valid bash syntax
@@ -243,8 +243,8 @@ If automated tests are not run, manual verification steps:
 ### 1. Check Release Binary
 
 ```bash
-./target/release/postgres-seren-replicator --version
-# Expected: postgres-seren-replicator 2.4.2
+./target/release/seren-replicator --version
+# Expected: seren-replicator 2.4.2
 ```
 
 ✅ **Status**: Binary built successfully

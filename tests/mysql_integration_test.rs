@@ -1,7 +1,7 @@
 // ABOUTME: Integration tests for MySQL-to-PostgreSQL replication workflow
 // ABOUTME: Tests full replication with real MySQL connections and PostgreSQL target
 
-use postgres_seren_replicator::commands;
+use seren_replicator::commands;
 use std::env;
 
 /// Helper to get test MySQL source URL from environment
@@ -18,7 +18,7 @@ fn get_test_target_url() -> Option<String> {
 async fn create_test_mysql_tables(mysql_url: &str) -> anyhow::Result<()> {
     use mysql_async::prelude::*;
 
-    let mut conn = postgres_seren_replicator::mysql::connect_mysql(mysql_url).await?;
+    let mut conn = seren_replicator::mysql::connect_mysql(mysql_url).await?;
 
     // Drop existing test tables if they exist
     let cleanup_queries = vec![
@@ -113,7 +113,7 @@ async fn create_test_mysql_tables(mysql_url: &str) -> anyhow::Result<()> {
 async fn cleanup_test_tables(mysql_url: &str) -> anyhow::Result<()> {
     use mysql_async::prelude::*;
 
-    let mut conn = postgres_seren_replicator::mysql::connect_mysql(mysql_url).await?;
+    let mut conn = seren_replicator::mysql::connect_mysql(mysql_url).await?;
 
     let cleanup_queries = vec![
         "DROP TABLE IF EXISTS users",
@@ -150,7 +150,7 @@ async fn test_mysql_full_replication_integration() {
         &mysql_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -191,7 +191,7 @@ async fn test_mysql_null_and_blob_handling() {
         &mysql_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -236,7 +236,7 @@ async fn test_mysql_empty_table_replication() {
         &mysql_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -271,7 +271,7 @@ async fn test_mysql_all_data_types() {
 
     use mysql_async::prelude::*;
 
-    let mut conn = postgres_seren_replicator::mysql::connect_mysql(&mysql_url)
+    let mut conn = seren_replicator::mysql::connect_mysql(&mysql_url)
         .await
         .expect("Failed to connect to MySQL");
 
@@ -327,7 +327,7 @@ async fn test_mysql_all_data_types() {
         &mysql_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -364,7 +364,7 @@ async fn test_mysql_empty_database_fails_gracefully() {
         &mysql_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -396,7 +396,7 @@ async fn test_mysql_invalid_url_fails() {
         "mysql://invalid-host-that-does-not-exist:3306/testdb",
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -434,7 +434,7 @@ async fn test_mysql_missing_database_name_fails() {
         &mysql_url_no_db,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -467,7 +467,7 @@ async fn test_mysql_decimal_and_datetime_precision() {
 
     use mysql_async::prelude::*;
 
-    let mut conn = postgres_seren_replicator::mysql::connect_mysql(&mysql_url)
+    let mut conn = seren_replicator::mysql::connect_mysql(&mysql_url)
         .await
         .expect("Failed to connect to MySQL");
 
@@ -503,7 +503,7 @@ async fn test_mysql_decimal_and_datetime_precision() {
         &mysql_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,

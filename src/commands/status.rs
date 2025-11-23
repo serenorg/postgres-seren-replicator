@@ -58,8 +58,8 @@ fn format_duration(ms: i64) -> String {
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::commands::status;
-/// # use postgres_seren_replicator::filters::ReplicationFilter;
+/// # use seren_replicator::commands::status;
+/// # use seren_replicator::filters::ReplicationFilter;
 /// # async fn example() -> Result<()> {
 /// // Show status for all databases
 /// status(

@@ -51,7 +51,7 @@ pub enum SourceType {
 /// # Examples
 ///
 /// ```
-/// # use postgres_seren_replicator::{detect_source_type, SourceType};
+/// # use seren_replicator::{detect_source_type, SourceType};
 /// assert_eq!(detect_source_type("postgresql://localhost/db").unwrap(), SourceType::PostgreSQL);
 /// assert_eq!(detect_source_type("database.db").unwrap(), SourceType::SQLite);
 /// assert_eq!(detect_source_type("data.sqlite3").unwrap(), SourceType::SQLite);

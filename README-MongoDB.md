@@ -1,6 +1,6 @@
 # MongoDB Replication Guide
 
-This guide explains how to replicate MongoDB databases to PostgreSQL using postgres-seren-replicator's JSONB storage approach.
+This guide explains how to replicate MongoDB databases to PostgreSQL using seren-replicator's JSONB storage approach.
 
 ## Overview
 
@@ -20,7 +20,7 @@ The tool automatically detects MongoDB connection strings and replicates collect
 Replicate an entire MongoDB database to PostgreSQL:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mongodb://localhost:27017/mydb" \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -571,12 +571,12 @@ No, each invocation replicates one database. To replicate multiple databases:
 
 ```bash
 # Replicate database 1
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mongodb://localhost:27017/db1" \
   --target "postgresql://user:pass@target:5432/db"
 
 # Replicate database 2
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mongodb://localhost:27017/db2" \
   --target "postgresql://user:pass@target:5432/db"
 ```

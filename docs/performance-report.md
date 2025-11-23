@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document describes the performance testing framework for `postgres-seren-replicator` across all supported database types (PostgreSQL, SQLite, MongoDB, MySQL). The test suite includes:
+This document describes the performance testing framework for `seren-replicator` across all supported database types (PostgreSQL, SQLite, MongoDB, MySQL). The test suite includes:
 
 - **13 performance benchmarks** covering all database types
 - **Automated test database generation** for consistent testing
@@ -357,7 +357,7 @@ _[Optional: Compare performance with alternative tools]_
 
 | Tool | Database Size | Migration Time | Notes |
 |------|--------------|----------------|-------|
-| postgres-seren-replicator | 100 MB | _[time]_ | This tool |
+| seren-replicator | 100 MB | _[time]_ | This tool |
 | pgloader | 100 MB | _[time]_ | Alternative |
 | Custom scripts | 100 MB | _[time]_ | Manual approach |
 

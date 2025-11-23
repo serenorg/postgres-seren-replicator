@@ -1,9 +1,9 @@
-# postgres-seren-replicator
+# seren-replicator
 
-[![CI](https://github.com/serenorg/postgres-seren-replicator/actions/workflows/ci.yml/badge.svg)](https://github.com/serenorg/postgres-seren-replicator/actions/workflows/ci.yml)
+[![CI](https://github.com/serenorg/seren-replicator/actions/workflows/ci.yml/badge.svg)](https://github.com/serenorg/seren-replicator/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Rust Version](https://img.shields.io/badge/rust-1.70%2B-blue.svg)](https://www.rust-lang.org)
-[![Latest Release](https://img.shields.io/github/v/release/serenorg/postgres-seren-replicator)](https://github.com/serenorg/postgres-seren-replicator/releases)
+[![Latest Release](https://img.shields.io/github/v/release/serenorg/seren-replicator)](https://github.com/serenorg/seren-replicator/releases)
 
 ## Universal database-to-PostgreSQL replication for AI agents
 
@@ -13,7 +13,7 @@ Migrate any database to PostgreSQL with zero downtime. Supports PostgreSQL, SQLi
 
 ## Overview
 
-`postgres-seren-replicator` is a command-line tool that replicates databases from multiple sources to PostgreSQL (including Seren Cloud). It automatically detects your source database type and handles the migration accordingly:
+`seren-replicator` is a command-line tool that replicates databases from multiple sources to PostgreSQL (including Seren Cloud). It automatically detects your source database type and handles the migration accordingly:
 
 - **PostgreSQL**: Zero-downtime replication with continuous sync via logical replication
 - **SQLite**: One-time migration using JSONB storage
@@ -50,7 +50,7 @@ Choose your source database to get started:
 Zero-downtime replication with continuous sync:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@target-host:5432/db"
 ```
@@ -64,7 +64,7 @@ postgres-seren-replicator init \
 One-time migration to JSONB storage:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source /path/to/database.db \
   --target "postgresql://user:pass@host:5432/db"
 ```
@@ -78,7 +78,7 @@ postgres-seren-replicator init \
 One-time migration with periodic refresh support:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mongodb://user:pass@host:27017/db" \
   --target "postgresql://user:pass@host:5432/db"
 ```
@@ -92,7 +92,7 @@ postgres-seren-replicator init \
 One-time migration with periodic refresh support:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://user:pass@host:3306/db" \
   --target "postgresql://user:pass@host:5432/db"
 ```
@@ -135,17 +135,17 @@ postgres-seren-replicator init \
 
 ### Download Pre-built Binaries
 
-Download the latest release for your platform from [GitHub Releases](https://github.com/serenorg/postgres-seren-replicator/releases/latest):
+Download the latest release for your platform from [GitHub Releases](https://github.com/serenorg/seren-replicator/releases/latest):
 
-- **Linux (x64)**: `postgres-seren-replicator-linux-x64-binary`
-- **macOS (Intel)**: `postgres-seren-replicator-macos-x64-binary`
-- **macOS (Apple Silicon)**: `postgres-seren-replicator-macos-arm64-binary`
+- **Linux (x64)**: `seren-replicator-linux-x64-binary`
+- **macOS (Intel)**: `seren-replicator-macos-x64-binary`
+- **macOS (Apple Silicon)**: `seren-replicator-macos-arm64-binary`
 
 Make the binary executable:
 
 ```bash
-chmod +x postgres-seren-replicator-*-binary
-./postgres-seren-replicator-*-binary --help
+chmod +x seren-replicator-*-binary
+./seren-replicator-*-binary --help
 ```
 
 ### Build from Source
@@ -153,12 +153,12 @@ chmod +x postgres-seren-replicator-*-binary
 Requires Rust 1.70 or later:
 
 ```bash
-git clone https://github.com/serenorg/postgres-seren-replicator.git
-cd postgres-seren-replicator
+git clone https://github.com/serenorg/seren-replicator.git
+cd seren-replicator
 cargo build --release
 ```
 
-The binary will be available at `target/release/postgres-seren-replicator`.
+The binary will be available at `target/release/seren-replicator`.
 
 ### Prerequisites
 
@@ -203,17 +203,17 @@ PostgreSQL-to-PostgreSQL replication uses logical replication for zero-downtime 
 
 ```bash
 # Validate prerequisites
-postgres-seren-replicator validate \
+seren-replicator validate \
   --source "postgresql://user:pass@source:5432/db" \
   --target "postgresql://user:pass@target:5432/db"
 
 # Initial snapshot
-postgres-seren-replicator init \
+seren-replicator init \
   --source "postgresql://user:pass@source:5432/db" \
   --target "postgresql://user:pass@target:5432/db"
 
 # Continuous sync
-postgres-seren-replicator sync \
+seren-replicator sync \
   --source "postgresql://user:pass@source:5432/db" \
   --target "postgresql://user:pass@target:5432/db"
 ```
@@ -264,7 +264,7 @@ Remote execution is the default - just run `init` as normal:
 
 ```bash
 # Runs on SerenAI's cloud infrastructure (default)
-./postgres-seren-replicator init \
+./seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db"
 ```
@@ -298,7 +298,7 @@ If you prefer to run replication on your local machine, use the `--local` flag:
 
 ```bash
 # Runs on your local machine
-./postgres-seren-replicator init \
+./seren-replicator init \
   --source "postgresql://user:pass@source-host:5432/db" \
   --target "postgresql://user:pass@seren-host:5432/db" \
   --local
@@ -317,7 +317,7 @@ Local execution is useful when:
 
 ```bash
 export SEREN_REMOTE_API="https://dev.api.seren.cloud/replication"
-./postgres-seren-replicator init \
+./seren-replicator init \
   --source "..." \
   --target "..."
 ```
@@ -326,7 +326,7 @@ export SEREN_REMOTE_API="https://dev.api.seren.cloud/replication"
 
 ```bash
 # Set 12-hour timeout for very large databases
-./postgres-seren-replicator init \
+./seren-replicator init \
   --source "..." \
   --target "..." \
   --job-timeout 43200
@@ -510,7 +510,7 @@ Check status frequently during replication:
 
 ```bash
 # Monitor until lag < 1 second
-watch -n 5 './postgres-seren-replicator status --source "$SOURCE" --target "$TARGET"'
+watch -n 5 './seren-replicator status --source "$SOURCE" --target "$TARGET"'
 ```
 
 ### "FK-related table will be truncated but is NOT being copied"
@@ -523,7 +523,7 @@ When using filtered snapshots (table-level WHERE clauses or time filters), table
 
 ```bash
 # If you're filtering orders, also include users table
-postgres-seren-replicator init \
+seren-replicator init \
   --source "$SOURCE" \
   --target "$TARGET" \
   --config replication.toml  # Include all FK-related tables
@@ -556,7 +556,7 @@ See [CLAUDE.md](CLAUDE.md) for development guidelines and practices.
 
 ### Reporting Issues
 
-Please report bugs and feature requests on the [GitHub Issues](https://github.com/serenorg/postgres-seren-replicator/issues) page.
+Please report bugs and feature requests on the [GitHub Issues](https://github.com/serenorg/seren-replicator/issues) page.
 
 ## License
 

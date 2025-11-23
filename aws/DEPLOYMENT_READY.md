@@ -9,7 +9,7 @@ All development work for remote replication is finished and ready to deploy.
 ## What's Ready
 
 ### 1. Release Binary
-- ✅ Built: `target/release/postgres-seren-replicator` (v2.4.2)
+- ✅ Built: `target/release/seren-replicator` (v2.4.2)
 - ✅ Tested: All commands functional
 - ✅ Size: ~11MB optimized binary
 
@@ -186,7 +186,7 @@ export SEREN_REMOTE_API=$(cd aws/terraform && terraform output -raw api_endpoint
 ./aws/test-integration.sh
 
 # Option B: Manual test with real databases
-postgres-seren-replicator init --remote \
+seren-replicator init --remote \
   --source "postgresql://user:pass@source:5432/db" \
   --target "postgresql://user:pass@target:5432/db" \
   --yes
@@ -245,7 +245,7 @@ terraform destroy
 
 # Optionally delete AMIs
 aws ec2 describe-images --owners self \
-  --filters "Name=name,Values=postgres-seren-replicator-worker-*" \
+  --filters "Name=name,Values=seren-replicator-worker-*" \
   --query 'Images[].ImageId' --output text | \
   xargs -n1 aws ec2 deregister-image --image-id
 ```
@@ -302,7 +302,7 @@ After successful deployment:
 
 ## Support
 
-- **Issues**: https://github.com/serenorg/postgres-seren-replicator/issues
+- **Issues**: https://github.com/serenorg/seren-replicator/issues
 - **Documentation**: See README files in each aws/ subdirectory
 - **AWS Docs**: https://docs.aws.amazon.com/
 

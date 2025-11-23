@@ -1,7 +1,7 @@
 // ABOUTME: Integration tests for remote execution functionality
 // ABOUTME: Tests job submission and status polling with the remote API
 
-use postgres_seren_replicator::remote::{JobSpec, RemoteClient};
+use seren_replicator::remote::{JobSpec, RemoteClient};
 use std::collections::HashMap;
 use std::env;
 
@@ -259,7 +259,7 @@ async fn test_remote_job_submission_with_filters() {
     let client = RemoteClient::new(api_url).expect("Failed to create remote client");
 
     // Create a job spec with database filters
-    let filter = postgres_seren_replicator::remote::FilterSpec {
+    let filter = seren_replicator::remote::FilterSpec {
         include_databases: Some(vec!["postgres".to_string()]),
         exclude_tables: None,
     };

@@ -2,7 +2,7 @@
 // ABOUTME: Parses commands and routes to appropriate handlers
 
 use clap::{Args, Parser, Subcommand};
-use postgres_seren_replicator::commands;
+use seren_replicator::commands;
 
 #[derive(Parser)]
 #[command(name = "postgres-seren-replicator")]
@@ -175,7 +175,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Clean up stale temp directories from previous runs (older than 24 hours)
     // This handles temp files left behind by processes killed with SIGKILL
-    if let Err(e) = postgres_seren_replicator::utils::cleanup_stale_temp_dirs(86400) {
+    if let Err(e) = seren_replicator::utils::cleanup_stale_temp_dirs(86400) {
         tracing::warn!("Failed to clean up stale temp directories: {}", e);
         // Don't fail startup if cleanup fails
     }
@@ -195,12 +195,11 @@ async fn main() -> anyhow::Result<()> {
             let filter = if !no_interactive {
                 // Interactive mode (default) - prompt user to select databases and tables
                 let (filter, rules) =
-                    postgres_seren_replicator::interactive::select_databases_and_tables(&source)
-                        .await?;
+                    seren_replicator::interactive::select_databases_and_tables(&source).await?;
                 filter.with_table_rules(rules)
             } else {
                 // CLI mode - use provided filter arguments
-                postgres_seren_replicator::filters::ReplicationFilter::new(
+                seren_replicator::filters::ReplicationFilter::new(
                     include_databases,
                     exclude_databases,
                     include_tables,
@@ -250,12 +249,11 @@ async fn main() -> anyhow::Result<()> {
             let filter = if !no_interactive && !yes {
                 // Interactive mode (default) - prompt user to select databases and tables
                 let (filter, rules) =
-                    postgres_seren_replicator::interactive::select_databases_and_tables(&source)
-                        .await?;
+                    seren_replicator::interactive::select_databases_and_tables(&source).await?;
                 filter.with_table_rules(rules)
             } else {
                 // CLI mode - use provided filter arguments
-                let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+                let filter = seren_replicator::filters::ReplicationFilter::new(
                     include_databases,
                     exclude_databases,
                     include_tables,
@@ -290,12 +288,11 @@ async fn main() -> anyhow::Result<()> {
             let filter = if !no_interactive {
                 // Interactive mode (default) - prompt user to select databases and tables
                 let (filter, rules) =
-                    postgres_seren_replicator::interactive::select_databases_and_tables(&source)
-                        .await?;
+                    seren_replicator::interactive::select_databases_and_tables(&source).await?;
                 filter.with_table_rules(rules)
             } else {
                 // CLI mode - use provided filter arguments
-                let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+                let filter = seren_replicator::filters::ReplicationFilter::new(
                     include_databases,
                     exclude_databases,
                     include_tables,
@@ -312,7 +309,7 @@ async fn main() -> anyhow::Result<()> {
             include_databases,
             exclude_databases,
         } => {
-            let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+            let filter = seren_replicator::filters::ReplicationFilter::new(
                 include_databases,
                 exclude_databases,
                 None,
@@ -328,7 +325,7 @@ async fn main() -> anyhow::Result<()> {
             include_tables,
             exclude_tables,
         } => {
-            let filter = postgres_seren_replicator::filters::ReplicationFilter::new(
+            let filter = seren_replicator::filters::ReplicationFilter::new(
                 include_databases,
                 exclude_databases,
                 include_tables,
@@ -353,9 +350,9 @@ async fn init_remote(
     remote_api: String,
     job_timeout: u64,
 ) -> anyhow::Result<()> {
-    use postgres_seren_replicator::migration;
-    use postgres_seren_replicator::postgres;
-    use postgres_seren_replicator::remote::{FilterSpec, JobSpec, RemoteClient};
+    use seren_replicator::migration;
+    use seren_replicator::postgres;
+    use seren_replicator::remote::{FilterSpec, JobSpec, RemoteClient};
     use std::collections::HashMap;
 
     println!("🌐 Remote execution mode enabled");
@@ -363,7 +360,7 @@ async fn init_remote(
 
     // Estimate database size for automatic instance selection
     println!("Analyzing database size...");
-    let filter_for_sizing = postgres_seren_replicator::filters::ReplicationFilter::new(
+    let filter_for_sizing = seren_replicator::filters::ReplicationFilter::new(
         include_databases.clone(),
         exclude_databases.clone(),
         include_tables.clone(),
@@ -491,10 +488,10 @@ async fn init_remote(
 
 fn build_table_rules(
     args: &TableRuleArgs,
-) -> anyhow::Result<postgres_seren_replicator::table_rules::TableRules> {
-    let mut rules = postgres_seren_replicator::table_rules::TableRules::default();
+) -> anyhow::Result<seren_replicator::table_rules::TableRules> {
+    let mut rules = seren_replicator::table_rules::TableRules::default();
     if let Some(path) = &args.config_path {
-        let from_file = postgres_seren_replicator::config::load_table_rules_from_file(path)?;
+        let from_file = seren_replicator::config::load_table_rules_from_file(path)?;
         rules.merge(from_file);
     }
     rules.apply_schema_only_cli(&args.schema_only_tables)?;

@@ -29,7 +29,7 @@ use mongodb::{options::ClientOptions, Client};
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::validate_mongodb_url;
+/// # use seren_replicator::mongodb::validate_mongodb_url;
 /// // Valid URLs
 /// assert!(validate_mongodb_url("mongodb://localhost:27017/mydb").is_ok());
 /// assert!(validate_mongodb_url("mongodb+srv://cluster.mongodb.net/mydb").is_ok());
@@ -84,7 +84,7 @@ pub fn validate_mongodb_url(connection_string: &str) -> Result<String> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::connect_mongodb;
+/// # use seren_replicator::mongodb::connect_mongodb;
 /// # async fn example() -> anyhow::Result<()> {
 /// let client = connect_mongodb("mongodb://localhost:27017/mydb").await?;
 /// // Use client to read data
@@ -134,7 +134,7 @@ pub async fn connect_mongodb(connection_string: &str) -> Result<Client> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::extract_database_name;
+/// # use seren_replicator::mongodb::extract_database_name;
 /// # async fn example() -> anyhow::Result<()> {
 /// assert_eq!(
 ///     extract_database_name("mongodb://localhost:27017/mydb").await?,

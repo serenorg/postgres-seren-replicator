@@ -30,8 +30,8 @@ use tokio_postgres::Client;
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::jsonb::writer::create_jsonb_table;
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::jsonb::writer::create_jsonb_table;
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # async fn example(client: &tokio_postgres::Client) -> anyhow::Result<()> {
 /// let table_name = "users";
 /// validate_table_name(table_name)?;
@@ -128,8 +128,8 @@ pub async fn create_jsonb_table(
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::jsonb::writer::insert_jsonb_row;
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::jsonb::writer::insert_jsonb_row;
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # use serde_json::json;
 /// # async fn example(client: &tokio_postgres::Client) -> anyhow::Result<()> {
 /// let table_name = "users";
@@ -193,8 +193,8 @@ pub async fn insert_jsonb_row(
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::jsonb::writer::insert_jsonb_batch;
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::jsonb::writer::insert_jsonb_batch;
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # use serde_json::json;
 /// # async fn example(client: &tokio_postgres::Client) -> anyhow::Result<()> {
 /// let table_name = "users";

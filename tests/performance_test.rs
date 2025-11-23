@@ -1,8 +1,8 @@
 // ABOUTME: Performance benchmarks for database migrations across all supported database types
 // ABOUTME: Tests migration speed, JSONB conversion performance, and resource usage
 
-use postgres_seren_replicator::commands;
 use rusqlite::Connection;
+use seren_replicator::commands;
 use std::env;
 use std::fs;
 use std::time::Instant;
@@ -194,7 +194,7 @@ async fn benchmark_sqlite_small_migration() {
         &sqlite_path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -234,7 +234,7 @@ async fn benchmark_sqlite_medium_migration() {
         &sqlite_path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -274,7 +274,7 @@ async fn benchmark_sqlite_large_migration() {
         &sqlite_path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -317,7 +317,7 @@ async fn benchmark_mongodb_small_collection() {
         &source_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -350,7 +350,7 @@ async fn benchmark_mongodb_medium_collection() {
         &source_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -387,7 +387,7 @@ async fn benchmark_mysql_small_table() {
         &source_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -420,7 +420,7 @@ async fn benchmark_mysql_medium_table() {
         &source_url,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -458,7 +458,7 @@ async fn benchmark_jsonb_batch_insert() {
         &sqlite_path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -495,7 +495,7 @@ async fn benchmark_connection_overhead() {
     println!("\n=== Connection Overhead Benchmark ===");
 
     let start = Instant::now();
-    let client = postgres_seren_replicator::postgres::connection::connect(&target_url)
+    let client = seren_replicator::postgres::connection::connect(&target_url)
         .await
         .expect("Connection should succeed");
     let elapsed = start.elapsed();
@@ -556,7 +556,7 @@ async fn benchmark_many_small_tables() {
         path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,

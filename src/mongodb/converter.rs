@@ -31,7 +31,7 @@ use serde_json::Value as JsonValue;
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::converter::bson_to_json;
+/// # use seren_replicator::mongodb::converter::bson_to_json;
 /// # use bson::Bson;
 /// let bson_int = Bson::Int32(42);
 /// let json = bson_to_json(&bson_int).unwrap();
@@ -149,7 +149,7 @@ pub fn bson_to_json(value: &Bson) -> Result<JsonValue> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::converter::document_to_json;
+/// # use seren_replicator::mongodb::converter::document_to_json;
 /// # use bson::{doc, Bson};
 /// let doc = doc! {
 ///     "name": "Alice",
@@ -199,8 +199,8 @@ pub fn document_to_json(document: &Document) -> Result<JsonValue> {
 /// # Examples
 ///
 /// ```no_run
-/// # use postgres_seren_replicator::mongodb::{connect_mongodb, converter::convert_collection_to_jsonb};
-/// # use postgres_seren_replicator::jsonb::validate_table_name;
+/// # use seren_replicator::mongodb::{connect_mongodb, converter::convert_collection_to_jsonb};
+/// # use seren_replicator::jsonb::validate_table_name;
 /// # async fn example() -> anyhow::Result<()> {
 /// let client = connect_mongodb("mongodb://localhost:27017/mydb").await?;
 /// let db = client.database("mydb");

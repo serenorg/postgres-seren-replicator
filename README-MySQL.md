@@ -1,6 +1,6 @@
 # MySQL/MariaDB Replication Guide
 
-This guide explains how to replicate MySQL and MariaDB databases to PostgreSQL using postgres-seren-replicator's JSONB storage approach.
+This guide explains how to replicate MySQL and MariaDB databases to PostgreSQL using seren-replicator's JSONB storage approach.
 
 ## Overview
 
@@ -27,7 +27,7 @@ The tool automatically detects MySQL/MariaDB connection strings and replicates d
 - **MySQL/MariaDB Database**: Version 5.7+ (MySQL) or 10.2+ (MariaDB)
 - **Connection Access**: Valid MySQL connection string with read permissions
 - **PostgreSQL Target**: Version 12+ with credentials for data writing
-- **Tool Installation**: postgres-seren-replicator binary installed
+- **Tool Installation**: seren-replicator binary installed
 
 ## Quick Start
 
@@ -36,7 +36,7 @@ The tool automatically detects MySQL/MariaDB connection strings and replicates d
 Replicate an entire MySQL database to PostgreSQL:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://user:password@mysql-host:3306/mydb" \
   --target "postgresql://user:password@pg-host:5432/db"
 ```
@@ -54,7 +54,7 @@ The tool automatically:
 MariaDB works identically - just use the same connection string format:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://user:password@mariadb-host:3306/mydb" \
   --target "postgresql://user:password@pg-host:5432/db"
 ```
@@ -92,7 +92,7 @@ postgresql://user:pass@seren.cloud:5432/target_db
 ### 3. Run the Replication
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://SOURCE_CONNECTION" \
   --target "postgresql://TARGET_CONNECTION"
 ```
@@ -370,7 +370,7 @@ LIMIT 10;
 Run replication jobs on SerenAI-managed cloud infrastructure:
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://SOURCE_CONNECTION" \
   --target "postgresql://TARGET_CONNECTION" \
   --remote
@@ -387,11 +387,11 @@ postgres-seren-replicator init \
 
 ```bash
 # Check job status
-postgres-seren-replicator status \
+seren-replicator status \
   --job-id <job-id>
 
 # View job logs
-postgres-seren-replicator logs \
+seren-replicator logs \
   --job-id <job-id>
 ```
 
@@ -555,7 +555,7 @@ A: No, this tool reads directly from the specified MySQL server. It doesn't inte
 ### Example 1: Local MySQL to Cloud PostgreSQL
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://root:password@localhost:3306/ecommerce" \
   --target "postgresql://user:pass@seren.cloud:5432/ecommerce"
 ```
@@ -563,7 +563,7 @@ postgres-seren-replicator init \
 ### Example 2: AWS RDS MySQL to PostgreSQL
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://admin:pass@mydb.abc123.us-east-1.rds.amazonaws.com:3306/production" \
   --target "postgresql://user:pass@target-host:5432/production"
 ```
@@ -571,7 +571,7 @@ postgres-seren-replicator init \
 ### Example 3: MariaDB Migration
 
 ```bash
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://maria_user:pass@mariadb.example.com:3306/mydb" \
   --target "postgresql://user:pass@pg-host:5432/mydb"
 ```
@@ -581,7 +581,7 @@ postgres-seren-replicator init \
 ```bash
 export SEREN_API_KEY="your-api-key"
 
-postgres-seren-replicator init \
+seren-replicator init \
   --source "mysql://user:pass@mysql-host:3306/db" \
   --target "postgresql://user:pass@pg-host:5432/db" \
   --remote
@@ -631,10 +631,10 @@ After replicating your MySQL data:
 ## Support
 
 For issues, questions, or feature requests:
-- **GitHub Issues**: [postgres-seren-replicator/issues](https://github.com/serenorg/postgres-seren-replicator/issues)
+- **GitHub Issues**: [seren-replicator/issues](https://github.com/serenorg/seren-replicator/issues)
 - **Documentation**: See main [README.md](README.md) for general tool documentation
 - **Security Issues**: Report privately to security@seren.ai
 
 ## License
 
-This tool is part of the postgres-seren-replicator project. See [LICENSE](LICENSE) for details.
+This tool is part of the seren-replicator project. See [LICENSE](LICENSE) for details.

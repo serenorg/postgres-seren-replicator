@@ -1,8 +1,8 @@
 // ABOUTME: Integration tests for SQLite-to-PostgreSQL migration workflow
 // ABOUTME: Tests full migration with real SQLite files and PostgreSQL connections
 
-use postgres_seren_replicator::commands;
 use rusqlite::Connection;
+use seren_replicator::commands;
 use std::env;
 use std::fs;
 
@@ -85,7 +85,7 @@ async fn test_sqlite_full_migration_integration() {
         &sqlite_path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -123,7 +123,7 @@ async fn test_sqlite_null_and_blob_handling() {
         &sqlite_path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -165,7 +165,7 @@ async fn test_sqlite_empty_table_migration() {
         &sqlite_path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -226,7 +226,7 @@ async fn test_sqlite_all_data_types() {
         path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -265,7 +265,7 @@ async fn test_sqlite_empty_database() {
         path,
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -299,7 +299,7 @@ async fn test_sqlite_invalid_path_fails() {
         "/nonexistent/path.db",
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,
@@ -330,7 +330,7 @@ async fn test_sqlite_path_traversal_prevention() {
         "../../../etc/passwd",
         &target_url,
         true,
-        postgres_seren_replicator::filters::ReplicationFilter::empty(),
+        seren_replicator::filters::ReplicationFilter::empty(),
         false,
         false,
         true,

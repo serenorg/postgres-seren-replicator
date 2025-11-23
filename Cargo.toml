@@ -1,10 +1,10 @@
 [package]
-name = "postgres-seren-replicator"
+name = "seren-replicator"
 version = "3.0.0"
 edition = "2021"
 license = "Apache-2.0"
 description = "Universal database-to-PostgreSQL replication for AI agents (SQLite, MongoDB, MySQL, PostgreSQL)"
-repository = "https://github.com/serenorg/postgres-seren-replicator"
+repository = "https://github.com/serenorg/seren-replicator"
 readme = "README.md"
 keywords = ["postgresql", "replication", "database", "migration", "cdc"]
 categories = ["command-line-utilities", "database"]

@@ -36,7 +36,7 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
 ///
 /// ```no_run
 /// # use anyhow::Result;
-/// # use postgres_seren_replicator::interactive::select_databases_and_tables;
+/// # use seren_replicator::interactive::select_databases_and_tables;
 /// # async fn example() -> Result<()> {
 /// let (filter, rules) = select_databases_and_tables(
 ///     "postgresql://user:pass@source.example.com/postgres"
