@@ -352,19 +352,6 @@ For more details on the AWS infrastructure and architecture, see the [AWS Setup 
 
 ---
 
-## PostgreSQL-Specific Features
-
-The following features are available for PostgreSQL-to-PostgreSQL replication. For complete documentation, see **[README-PostgreSQL.md](README-PostgreSQL.md)**:
-
-- **Selective Replication**: Filter databases and tables with include/exclude lists
-- **Interactive Mode**: Terminal UI for selecting what to replicate
-- **Schema-Aware Filtering**: Target specific schema.table combinations
-- **Partial Data Replication**: Use WHERE clauses and time filters
-- **Configuration Files**: Complex filtering rules in TOML format
-- **Multi-Provider Support**: Works with Neon, AWS RDS, Hetzner, self-hosted PostgreSQL
-- **Secure Credentials**: `.pgpass` files for safe credential handling
-- **Subscription Security**: Guidelines for protecting connection strings in pg_subscription
-
 ## Testing
 
 ### Unit Tests
